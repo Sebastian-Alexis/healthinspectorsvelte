@@ -10,27 +10,31 @@
 	let phraseIndex = 0;
 	let letterIndex = 0;
 	let deleting = false;
+	let dropdownOpen = false;
 
+	function toggleDropdown() {
+		dropdownOpen = !dropdownOpen;
+	}
 	function typeWriter() {
 		if (!deleting && letterIndex < phrases[phraseIndex].length) {
 			currentPhrase += phrases[phraseIndex].charAt(letterIndex);
 			letterIndex++;
-			setTimeout(typeWriter, 150);
+			setTimeout(typeWriter, 100);
 		} else if (deleting) {
 			if (letterIndex > 0) {
 				currentPhrase = currentPhrase.substring(0, currentPhrase.length - 1);
 				letterIndex--;
-				setTimeout(typeWriter, 75); // Faster deletion speed
+				setTimeout(typeWriter, 50); // Faster deletion speed
 			} else {
 				deleting = false;
 				phraseIndex = (phraseIndex + 1) % phrases.length;
-				setTimeout(typeWriter, 2000); // Adjust pause between phrases
+				setTimeout(typeWriter, 1333); // Adjust pause between phrases
 			}
 		} else {
 			setTimeout(() => {
 				deleting = true;
 				typeWriter();
-			}, 3000); // Pause before deleting
+			}, 2000); // Pause before deleting
 		}
 	}
 
@@ -42,19 +46,67 @@
 	});
 </script>
 
-<div class="container mx-auto p-4">
-	<div class="flex flex-col lg:flex-row">
-		<div class="w-full lg:w-1/2 justify-center">
-			<article class="prose lg:pl-6 mt-64">
+<div class="navbar bg-base-100">
+	<div class="navbar-start">
+		<div class="dropdown">
+			<!-- svelte-ignore a11y-click-events-have-key-events -->
+			<div on:click={toggleDropdown} tabindex="0" role="button" class="btn btn-ghost btn-circle">
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					class="h-5 w-5"
+					fill="none"
+					viewBox="0 0 24 24"
+					stroke="currentColor"
+				>
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M4 6h16M4 12h16M4 18h7"
+					/>
+				</svg>
+			</div>
+			{#if dropdownOpen}
+				<!-- svelte-ignore a11y-<code> -->
+				<ul
+					tabindex="0"
+					class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52"
+				>
+					<li><a href="/">Homepage</a></li>
+					<li><a href="/dashboard">Dashboard</a></li>
+					<li><a href="https://sebastianalexis.com">Portfolio</a></li>
+				</ul>
+			{/if}
+		</div>
+	</div>
+	<div class="navbar-center">
+		<a class="btn btn-ghost text-xl" href="/">HealthInspector</a>
+	</div>
+	<div class="navbar-end">
+		<a class="btn" href="mailto:sebastianralexis@gmail.com">Contact</a>
+	</div>
+</div>
+
+<div class="container mx-auto px-4 sm:px-6 lg:px-8">
+	<div class="flex flex-col-reverse lg:flex-row">
+		<div class="w-full lg:w-1/2">
+			<article class="prose lg:prose-lg xl:prose-xl mt-10 lg:mt-44">
 				<h1>
 					{currentPhrase}<span class="cursor" style="opacity: {cursorOpacity}">_</span>
 				</h1>
-				<p class="text-lg opacity-60 text-black">
-					HealthInspect is a one-stop shop for identifying head to detect dependenceis an
+				<p class="text-base sm:text-lg md:text-xl opacity-60 text-black">
+					HealthInspector is a one-stop shop for identifying both direct and transitive
+					dependencies. We then directly help you create a comprehensive SBOM (Software Bill Of
+					Materials) and check each dependency for vulnerabilities. We detect vulnerabilities by
+					calling the NVD (National Vulnerability Database) and accurately letting you know about
+					your dependencies’ latest vulnerabilities.
 				</p>
+				<a href="/dashboard">
+					<button class="btn btn-primary">Go To Dashboard</button>
+				</a>
 			</article>
 		</div>
-		<div class="w-full lg:w-1/2 mt-48">
+		<div class="w-full lg:w-1/2 mt-28">
 			<div class="mockup-browser bg-base-300 tilt-3d relative">
 				<div class="mockup-browser-toolbar custom-toolbar">
 					<div class="input">https://healthinspector.sebastianalexis.com/dashboard</div>
