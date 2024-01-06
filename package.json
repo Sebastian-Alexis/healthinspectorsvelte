@@ -24,6 +24,7 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"lodash": "^4.17.21"
+		"lodash": "^4.17.21",
+		"toml": "^3.0.0"
 	}
 }

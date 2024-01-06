@@ -90,7 +90,7 @@
 <div class="container mx-auto px-4 sm:px-6 lg:px-8">
 	<div class="flex flex-col-reverse lg:flex-row">
 		<div class="w-full lg:w-1/2">
-			<article class="prose lg:prose-lg xl:prose-xl mt-10 lg:mt-44">
+			<article class="prose mt-10 lg:mt-44">
 				<h1>
 					{currentPhrase}<span class="cursor" style="opacity: {cursorOpacity}">_</span>
 				</h1>
