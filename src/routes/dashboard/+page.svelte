@@ -5,25 +5,59 @@
 	let isLoading = false;
 	let errorMessage = '';
 	let dependencyTree = '';
+	let fileInput;
 
-	async function fetchDependencies() {
+	function handleFileChange(event) {
+		const file = event.target.files[0];
+		if (file) {
+			const reader = new FileReader();
+			reader.onload = (e) => {
+				const contents = e.target.result;
+				processFileContents(contents);
+			};
+			reader.readAsText(file);
+		}
+	}
+
+	function processFileContents(contents) {
+		const lines = contents.split('\n');
+		const libraries = lines
+			.map((line) => {
+				const parts = line.split('==');
+				if (parts.length === 2 && parts[0] && parts[1]) {
+					return { name: parts[0], version: parts[1] };
+				}
+				return null;
+			})
+			.filter((lib) => lib !== null);
+		fetchAllDependencies(libraries);
+	}
+
+	async function fetchAllDependencies(libraries) {
 		isLoading = true;
 		errorMessage = '';
 		dependencyTree = '';
 
 		try {
-			const response = await fetch(
-				`/api/dependencies?library=${libraryName}&version=${libraryVersion}`
+			const promises = libraries.map((lib) =>
+				fetch(`/api/dependencies?library=${lib.name}&version=${lib.version}`)
+					.then((response) => {
+						if (!response.ok) {
+							console.error(`Failed to fetch for ${lib.name}`);
+							return { dependencyTree: `Failed to fetch for ${lib.name}\n` };
+						}
+						return response.json();
+					})
+					.catch((error) => {
+						console.error(`Error fetching dependencies for ${lib.name}:`, error);
+						return { dependencyTree: `Error fetching dependencies for ${lib.name}\n` };
+					})
 			);
-			if (!response.ok) {
-				throw new Error(`HTTP error! status: ${response.status}`);
-			}
-			const data = await response.json();
-
-			dependencyTree = data.dependencyTree; // Use the formatted dependency tree string from the response
+			const results = await Promise.all(promises);
+			dependencyTree = results.map((result) => result.dependencyTree).join('\n');
 		} catch (error) {
-			console.error('Error fetching dependencies:', error);
-			errorMessage = 'Failed to fetch dependencies';
+			console.error('Error in processing dependencies:', error);
+			errorMessage = 'Failed to process dependencies';
 		} finally {
 			isLoading = false;
 		}
@@ -48,6 +82,12 @@
 		bind:value={libraryVersion}
 	/>
 	<button class="btn btn-primary" on:click={handleSubmit} disabled={isLoading}>Submit</button>
+	<input
+		type="file"
+		class="file-input file-input-bordered w-full max-w-xs"
+		bind:this={fileInput}
+		on:change={handleFileChange}
+	/>
 </div>
 
 {#if errorMessage}
