@@ -12,12 +12,13 @@ async function fetchRuntimeDependencies(library, version) {
 			throw new Error(`Failed to fetch Libraries.io data for ${library}`);
 		}
 		const data = await response.json();
-		const runtimeDependencies = data.dependencies.filter((dep) => dep.kind === 'runtime');
-		return runtimeDependencies.map((dep) => ({
-			name: dep.name,
-			requirements: dep.requirements,
-			latest_stable: dep.latest_stable
-		}));
+		return data.dependencies
+			.filter((dep) => dep.kind === 'runtime')
+			.map((dep) => ({
+				name: dep.name,
+				requirements: dep.requirements,
+				latest_stable: dep.latest_stable
+			}));
 	} catch (error) {
 		console.error(
 			`Error fetching runtime dependencies from Libraries.io for ${library}: ${error.message}`
@@ -26,19 +27,20 @@ async function fetchRuntimeDependencies(library, version) {
 	}
 }
 
-async function fetchDependenciesRecursively(library, version) {
+async function fetchDependenciesRecursively(library, version, depth = 0) {
 	try {
 		const dependencies = await fetchRuntimeDependencies(library, version);
 
 		for (const dep of dependencies) {
-			// Check if latest_stable is a non-empty string and not undefined
 			if (typeof dep.latest_stable === 'string' && dep.latest_stable) {
-				dep.dependencies = await fetchDependenciesRecursively(dep.name, dep.latest_stable);
-			} else {
-				dep.dependencies = [];
-				console.log(
-					`No stable version found or undefined for ${dep.name}, skipping its dependencies`
+				dep.dependencies = await fetchDependenciesRecursively(
+					dep.name,
+					dep.latest_stable,
+					depth + 1
 				);
+			} else {
+				console.log(`No stable version found for ${dep.name}, skipping its dependencies`);
+				dep.dependencies = [];
 			}
 		}
 
@@ -49,11 +51,20 @@ async function fetchDependenciesRecursively(library, version) {
 	}
 }
 
+function formatDependencyTree(dependencies, level = 0) {
+	return dependencies
+		.map((dep) => {
+			const prefix = ' '.repeat(level * 2);
+			const subDeps =
+				dep.dependencies.length > 0 ? `\n${formatDependencyTree(dep.dependencies, level + 1)}` : '';
+			return `${prefix}${dep.name} - ${dep.latest_stable}${subDeps}`;
+		})
+		.join('\n');
+}
+
 export async function GET({ url }) {
 	const library = url.searchParams.get('library');
 	const version = url.searchParams.get('version'); // Assuming version is passed as a query parameter
-
-	console.log('Library requested:', library);
 
 	if (!library || !version) {
 		console.error('Error: Library name and version are required');
@@ -64,12 +75,13 @@ export async function GET({ url }) {
 			}
 		});
 	}
-	try {
-		console.log(`Fetching dependencies recursively from Libraries.io for ${library}`);
-		const dependencies = await fetchDependenciesRecursively(library, version);
-		console.log(`All dependencies for ${library}:`, dependencies);
 
-		return new Response(JSON.stringify(dependencies), {
+	try {
+		const dependencies = await fetchDependenciesRecursively(library, version);
+		const dependencyTreeString = formatDependencyTree(dependencies);
+		console.log(dependencyTreeString); // This will log the formatted tree string
+
+		return new Response(JSON.stringify({ dependencyTree: dependencyTreeString }), {
 			status: 200,
 			headers: {
 				'Content-Type': 'application/json'

@@ -1,54 +1,36 @@
 <script>
 	import { onMount } from 'svelte';
-	import Dependency from './components/Dependency.svelte';
 	let libraryName = '';
-	let libraryVersion = ''; // New variable for library version
-	let rootDependency = null;
+	let libraryVersion = '';
 	let isLoading = false;
 	let errorMessage = '';
-	let visited = new Set();
+	let dependencyTree = '';
 
-	async function fetchDependenciesRecursively(library, version, parentDependency = null) {
-		if (visited.has(`${library}@${version}`)) {
-			console.log(`Skipping already processed library: ${library} (${version})`);
-			return;
-		}
-
-		visited.add(`${library}@${version}`);
-		console.log('Fetching dependencies for:', library, version);
+	async function fetchDependencies() {
+		isLoading = true;
+		errorMessage = '';
+		dependencyTree = '';
 
 		try {
-			const response = await fetch(`/api/dependencies?library=${library}&version=${version}`);
+			const response = await fetch(
+				`/api/dependencies?library=${libraryName}&version=${libraryVersion}`
+			);
 			if (!response.ok) {
 				throw new Error(`HTTP error! status: ${response.status}`);
 			}
-			const deps = await response.json();
+			const data = await response.json();
 
-			const depNode = { name: `${library} (${version})`, dependencies: [] };
-			if (parentDependency) {
-				parentDependency.dependencies.push(depNode);
-			} else {
-				rootDependency = depNode;
-			}
-
-			for (const dep of deps) {
-				// Assuming the version is also returned in each dependency
-				await fetchDependenciesRecursively(dep.name, dep.version, depNode);
-			}
+			dependencyTree = data.dependencyTree; // Use the formatted dependency tree string from the response
 		} catch (error) {
 			console.error('Error fetching dependencies:', error);
 			errorMessage = 'Failed to fetch dependencies';
+		} finally {
+			isLoading = false;
 		}
 	}
 
 	function handleSubmit() {
-		rootDependency = null;
-		visited.clear();
-		isLoading = true;
-		errorMessage = '';
-		fetchDependenciesRecursively(libraryName, libraryVersion)
-			.then(() => (isLoading = false))
-			.catch(() => (isLoading = false));
+		fetchDependencies();
 	}
 </script>
 
@@ -72,14 +54,15 @@
 	<p class="text-red-500">{errorMessage}</p>
 {/if}
 
-{#if rootDependency}
-	<div class="join join-vertical flex w-1/2 pt-6">
-		{#each rootDependency.dependencies as dep}
-			<Dependency {dep} />
-		{/each}
-	</div>
+{#if dependencyTree}
+	<pre class="dependency-tree">{dependencyTree}</pre>
 {/if}
 
 <style>
-	/* Your styles here */
+	.dependency-tree {
+		white-space: pre-wrap;
+		background-color: #f5f5f5;
+		border: 1px solid #ccc;
+		padding: 1em;
+	}
 </style>
