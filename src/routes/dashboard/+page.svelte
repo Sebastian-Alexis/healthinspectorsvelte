@@ -84,7 +84,7 @@
 	}
 </script>
 
-<article class="prose mt-2 p-4">
+<article class="prose mt-6 px-12">
 	<div class="absolute top-6 right-4">
 		<select class="select select-bordered">
 			<option selected>Python (pip)</option>
@@ -95,35 +95,66 @@
 	<!-- Rest of your content here -->
 </article>
 
-<div class="flex gap-2 pt-2 px-2">
-	<input
-		type="text"
-		placeholder="Type Python library name"
-		class="input input-bordered w-full max-w-xs"
-		bind:value={libraryName}
-	/>
-	<input
-		type="text"
-		placeholder="Version"
-		class="input input-bordered w-full max-w-xs"
-		bind:value={libraryVersion}
-	/>
-	<button class="btn btn-primary" on:click={handleSubmit} disabled={isLoading}>Submit</button>
-	<input
-		type="file"
-		class="file-input file-input-bordered w-full max-w-xs"
-		bind:this={fileInput}
-		on:change={handleFileChange}
-	/>
+<div class="h-8"></div>
+
+<div class="p-4 flex px-12">
+	<!-- First Box -->
+	<div class="card p-4 w-1/2 h-60 bg-slate-200 drop-shadow-xl mr-4">
+		<article class="prose flex items-center px-2">
+			<h1 class="label-text prose text-2xl">Provide A Library</h1>
+		</article>
+		<div class="flex gap-2 pt-2 px-2">
+			<input
+				type="text"
+				placeholder="Type Python library name"
+				class="input input-bordered w-full max-w-xs"
+				bind:value={libraryName}
+			/>
+			<input
+				type="text"
+				placeholder="Version"
+				class="input input-bordered w-1/6"
+				bind:value={libraryVersion}
+			/>
+			<button class="btn btn-primary" on:click={handleSubmit} disabled={isLoading}>Submit</button>
+		</div>
+		<label class="form-control w-full max-w-xs">
+			<div class="label">
+				<article class="prose flex items-center justify-center">
+					<h1 class="label-text text-center prose text-2xl">Or, Pick A File</h1>
+				</article>
+			</div>
+			<input
+				type="file"
+				class="file-input file-input-bordered w-full max-w-xs"
+				bind:this={fileInput}
+				on:change={handleFileChange}
+			/>
+		</label>
+	</div>
+
+	<div class="w-[6rem]"></div>
+
+	<!-- Second Box -->
+	<div class="card p-4 w-1/2 h-auto bg-slate-200 drop-shadow-xl">
+		{#if errorMessage}
+			<p class="text-red-500">{errorMessage}</p>
+		{/if}
+
+		{#if dependencyTree}
+			<pre class="dependency-tree">{dependencyTree}</pre>
+		{/if}
+	</div>
 </div>
 
-{#if errorMessage}
-	<p class="text-red-500">{errorMessage}</p>
-{/if}
-
-{#if dependencyTree}
-	<pre class="dependency-tree">{dependencyTree}</pre>
-{/if}
+<div class="p-4 flex px-12">
+	<!-- First Box -->
+	<div class="card p-4 w-[38.7rem] h-60 bg-slate-200 drop-shadow-xl mr-4">
+		<article class="prose text-xl">
+			<h1>Vulnerabilities</h1>
+		</article>
+	</div>
+</div>
 
 <style>
 	.dependency-tree {
