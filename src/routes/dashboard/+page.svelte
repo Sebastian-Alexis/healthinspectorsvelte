@@ -39,22 +39,30 @@
 		dependencyTree = '';
 
 		try {
-			const promises = libraries.map((lib) =>
-				fetch(`/api/dependencies?library=${lib.name}&version=${lib.version}`)
-					.then((response) => {
+			const results = await Promise.all(
+				libraries.map(async (lib) => {
+					try {
+						const response = await fetch(
+							`/api/dependencies?library=${lib.name}&version=${lib.version}`
+						);
 						if (!response.ok) {
-							console.error(`Failed to fetch for ${lib.name}`);
-							return { dependencyTree: `Failed to fetch for ${lib.name}\n` };
+							throw new Error(`HTTP error! status: ${response.status}`);
 						}
-						return response.json();
-					})
-					.catch((error) => {
+						const data = await response.json();
+						// Format the dependency tree with an indent for dependencies
+						const formattedDependencyTree = data.dependencyTree
+							.split('\n')
+							.map((line) => '  ' + line) // Add two spaces for indent
+							.join('\n');
+						return `${lib.name} - ${lib.version}\n${formattedDependencyTree}`;
+					} catch (error) {
 						console.error(`Error fetching dependencies for ${lib.name}:`, error);
-						return { dependencyTree: `Error fetching dependencies for ${lib.name}\n` };
-					})
+						return `${lib.name} - ${lib.version}\n  Failed to fetch dependencies\n`;
+					}
+				})
 			);
-			const results = await Promise.all(promises);
-			dependencyTree = results.map((result) => result.dependencyTree).join('\n');
+
+			dependencyTree = results.join('\n\n'); // Add an extra line break between libraries
 		} catch (error) {
 			console.error('Error in processing dependencies:', error);
 			errorMessage = 'Failed to process dependencies';
@@ -64,9 +72,28 @@
 	}
 
 	function handleSubmit() {
-		fetchDependencies();
+		// Check if libraryName and libraryVersion are provided
+		if (!libraryName || !libraryVersion) {
+			errorMessage = 'Library name and version are required';
+			return;
+		}
+
+		// Create an array with a single library object
+		const singleLibrary = [{ name: libraryName, version: libraryVersion }];
+		fetchAllDependencies(singleLibrary);
 	}
 </script>
+
+<article class="prose mt-2 p-4">
+	<div class="absolute top-6 right-4">
+		<select class="select select-bordered">
+			<option selected>Python (pip)</option>
+			<option>Java (Maven)</option>
+		</select>
+	</div>
+	<h1>Dashboard</h1>
+	<!-- Rest of your content here -->
+</article>
 
 <div class="flex gap-2 pt-2 px-2">
 	<input
