@@ -118,10 +118,10 @@
 			/>
 			<button class="btn btn-primary" on:click={handleSubmit} disabled={isLoading}>Submit</button>
 		</div>
-		<label class="form-control w-full max-w-xs">
+		<label class="form-controls">
 			<div class="label">
-				<article class="prose flex items-center justify-center">
-					<h1 class="label-text text-center prose text-2xl">Or, Pick A File</h1>
+				<article class="prose flex">
+					<h1 class="label-text prose text-2xl">Or, Pick A requirements.txt File</h1>
 				</article>
 			</div>
 			<input
@@ -147,14 +147,14 @@
 	</div>
 </div>
 
-<div class="p-4 flex px-12">
-	<!-- First Box -->
+<!-- <div class="p-4 flex px-12">
+
 	<div class="card p-4 w-[38.7rem] h-60 bg-slate-200 drop-shadow-xl mr-4">
 		<article class="prose text-xl">
 			<h1>Vulnerabilities</h1>
 		</article>
 	</div>
-</div>
+</div> -->
 
 <style>
 	.dependency-tree {
