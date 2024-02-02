@@ -134,7 +134,7 @@ function formatDependencyTree(dependencies, level = 0) {
 
 export async function GET({ url }) {
 	const library = url.searchParams.get('library');
-	const version = url.searchParams.get('version'); // Assuming version is passed as a query parameter
+	const version = url.searchParams.get('version'); // Assuming version is passed as a query parameter.
 
 	if (!library || !version) {
 		console.error('Error: Library name and version are required');
