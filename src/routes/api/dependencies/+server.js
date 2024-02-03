@@ -68,9 +68,6 @@ async function checkVulnerabilities(library, version) {
 
 async function fetchDependenciesRecursively(library, version, depth = 0) {
 	try {
-		const dependencies = await fetchRuntimeDependencies(library, version);
-		console.log(`Fetched dependencies for ${library}:`, dependencies);
-
 		const vulnerabilityResponse = await checkVulnerabilities(library, version);
 		console.log(`Vulnerability response for ${library}:`, vulnerabilityResponse);
 
@@ -80,6 +77,9 @@ async function fetchDependenciesRecursively(library, version, depth = 0) {
 				vuln.aliases ? vuln.aliases.filter((alias) => alias.startsWith('CVE-')) : []
 			)
 			.join(', ');
+
+		const dependencies = await fetchRuntimeDependencies(library, version);
+		console.log(`Fetched dependencies for ${library}:`, dependencies);
 
 		for (const dep of dependencies) {
 			const vulnerabilityResponse = await checkVulnerabilities(dep.name, dep.latest_stable);
@@ -98,15 +98,10 @@ async function fetchDependenciesRecursively(library, version, depth = 0) {
 			}
 		}
 
-		return dependencies;
-
-		return dependencies.map((dep) => {
-			const depWithCve = `${dep.name} - ${dep.latest_stable}`;
-			return cveIds ? `${depWithCve} (CVEs: ${cveIds})` : depWithCve;
-		});
+		return { dependencies, cveIds }; // Return both dependencies and CVE IDs
 	} catch (error) {
 		console.error(`Error in recursive dependency fetching for ${library}: ${error.message}`);
-		return [];
+		return { dependencies: [], cveIds: '' }; // Return empty dependencies and CVE IDs on error
 	}
 }
 
@@ -134,7 +129,7 @@ function formatDependencyTree(dependencies, level = 0) {
 
 export async function GET({ url }) {
 	const library = url.searchParams.get('library');
-	const version = url.searchParams.get('version'); // Assuming version is passed as a query parameter.
+	const version = url.searchParams.get('version'); // Assuming version is passed as a query parameter
 
 	if (!library || !version) {
 		console.error('Error: Library name and version are required');
@@ -147,8 +142,12 @@ export async function GET({ url }) {
 	}
 
 	try {
-		const dependencies = await fetchDependenciesRecursively(library, version);
-		const dependencyTreeString = formatDependencyTree(dependencies);
+		const { dependencies, cveIds } = await fetchDependenciesRecursively(library, version);
+		let dependencyTreeString = formatDependencyTree(dependencies);
+
+		// Append CVE IDs to the final output string
+		dependencyTreeString += ` (${cveIds})`;
+
 		console.log(dependencyTreeString); // This will log the formatted tree string
 
 		return new Response(JSON.stringify({ dependencyTree: dependencyTreeString }), {
