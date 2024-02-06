@@ -1,4 +1,4 @@
-import fetch from 'node-fetch';
+import nodeFetch from 'node-fetch';
 
 const LIBRARIES_IO_API_KEYS = [
 	'7165ca9cc733d1abd00a87a930d9d714',
@@ -13,7 +13,7 @@ async function fetchRuntimeDependencies(library, version) {
 		const requestUrl = `https://libraries.io/api/pypi/${library}/${version}/dependencies?api_key=${apiKey}`;
 		console.log('Making request to:', requestUrl);
 
-		const response = await fetch(requestUrl);
+		const response = await nodeFetch(requestUrl);
 		if (!response.ok) {
 			if (response.status === 429) {
 				// Rotate API key and retry
@@ -37,6 +37,7 @@ async function fetchRuntimeDependencies(library, version) {
 		return [];
 	}
 }
+
 async function checkVulnerabilities(library, version) {
 	try {
 		const requestBody = {
@@ -47,12 +48,11 @@ async function checkVulnerabilities(library, version) {
 			}
 		};
 
-		const response = await fetch('https://api.osv.dev/v1/query', {
+		const response = await nodeFetch('https://api.osv.dev/v1/query', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(requestBody)
 		});
-		return response.json();
 
 		if (!response.ok) {
 			throw new Error(`HTTP error! status: ${response.status}`);
@@ -63,6 +63,33 @@ async function checkVulnerabilities(library, version) {
 	} catch (error) {
 		console.error(`Error checking vulnerabilities for ${library}: ${error.message}`);
 		return { vulns: [] }; // Return empty vulnerabilities on error
+	}
+}
+
+const fetch = require('fetch-cookie')(require('node-fetch'));
+
+async function fetchCVEBaseScore(cveId) {
+	try {
+		const apiUrl = `https://services.nvd.nist.gov/rest/json/cves/2.0?cveID=${cveId}`;
+		console.log('Fetching base score for CVE ID:', cveId);
+		console.log('API URL:', apiUrl);
+
+		const response = await nodeFetch(apiUrl);
+		if (!response.ok) {
+			throw new Error(`Failed to fetch NVD API data for CVE ID: ${cveId}`);
+		}
+		const data = await response.json();
+		console.log('API response:', data);
+
+		if (data.vulnerabilities && data.vulnerabilities.length > 0) {
+			const baseScore = data.vulnerabilities[0].metrics.cvssMetricV2[0].cvssData.baseScore;
+			return baseScore;
+		} else {
+			throw new Error(`CVE base score not found for CVE ID: ${cveId}`);
+		}
+	} catch (error) {
+		console.error(`Error fetching base score for CVE ID: ${cveId}: ${error.message}`);
+		return null;
 	}
 }
 
@@ -149,6 +176,21 @@ export async function GET({ url }) {
 		dependencyTreeString += ` (${cveIds})`;
 
 		console.log(dependencyTreeString); // This will log the formatted tree string
+
+		// Print CVEs to the terminal
+		const cveList = cveIds.split(',').map((cve) => cve.trim());
+		console.log('CVEs:', cveList);
+
+		// Fetch base scores for CVEs and calculate average
+		const baseScores = [];
+		for (const cveId of cveList) {
+			const baseScore = await fetchCVEBaseScore(cveId);
+			if (baseScore !== null) {
+				baseScores.push(baseScore);
+			}
+		}
+		const averageBaseScore = baseScores.reduce((sum, score) => sum + score, 0) / baseScores.length;
+		console.log('Average Base Score:', averageBaseScore);
 
 		return new Response(JSON.stringify({ dependencyTree: dependencyTreeString }), {
 			status: 200,
