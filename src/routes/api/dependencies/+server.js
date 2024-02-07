@@ -1,4 +1,7 @@
 import nodeFetch from 'node-fetch';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 const LIBRARIES_IO_API_KEYS = [
 	'7165ca9cc733d1abd00a87a930d9d714',
@@ -63,33 +66,6 @@ async function checkVulnerabilities(library, version) {
 	} catch (error) {
 		console.error(`Error checking vulnerabilities for ${library}: ${error.message}`);
 		return { vulns: [] }; // Return empty vulnerabilities on error
-	}
-}
-
-const fetch = require('fetch-cookie')(require('node-fetch'));
-
-async function fetchCVEBaseScore(cveId) {
-	try {
-		const apiUrl = `https://services.nvd.nist.gov/rest/json/cves/2.0?cveID=${cveId}`;
-		console.log('Fetching base score for CVE ID:', cveId);
-		console.log('API URL:', apiUrl);
-
-		const response = await nodeFetch(apiUrl);
-		if (!response.ok) {
-			throw new Error(`Failed to fetch NVD API data for CVE ID: ${cveId}`);
-		}
-		const data = await response.json();
-		console.log('API response:', data);
-
-		if (data.vulnerabilities && data.vulnerabilities.length > 0) {
-			const baseScore = data.vulnerabilities[0].metrics.cvssMetricV2[0].cvssData.baseScore;
-			return baseScore;
-		} else {
-			throw new Error(`CVE base score not found for CVE ID: ${cveId}`);
-		}
-	} catch (error) {
-		console.error(`Error fetching base score for CVE ID: ${cveId}: ${error.message}`);
-		return null;
 	}
 }
 
@@ -179,18 +155,73 @@ export async function GET({ url }) {
 
 		// Print CVEs to the terminal
 		const cveList = cveIds.split(',').map((cve) => cve.trim());
-		console.log('CVEs:', cveList);
+		// Call the NVD API for each CVE in the list
+		// Call the NVD API for each CVE in the list
+		const cveResults = [];
+		const cveSet = new Set(cveList); // Use a Set to remove duplicates
 
-		// Fetch base scores for CVEs and calculate average
-		const baseScores = [];
-		for (const cveId of cveList) {
-			const baseScore = await fetchCVEBaseScore(cveId);
-			if (baseScore !== null) {
-				baseScores.push(baseScore);
+		for (const cve of cveSet) {
+			const apiUrl = `https://services.nvd.nist.gov/rest/json/cves/2.0?cveID=${cve}`;
+
+			// Check if the CVE ID already exists in cveResults
+			const existingCve = cveResults.find((result) => result.cveID === cve);
+			if (existingCve) {
+				console.log(`CVE ${cve} is already stored.`);
+				continue; // Skip making the API call
+			}
+
+			const response = await nodeFetch(apiUrl);
+			if (response.ok) {
+				const result = await response.json();
+				cveResults.push(result);
+			} else {
+				console.error(`Failed to fetch NVD API data for CVE ${cve}`);
 			}
 		}
-		const averageBaseScore = baseScores.reduce((sum, score) => sum + score, 0) / baseScores.length;
-		console.log('Average Base Score:', averageBaseScore);
+		// Store the API results in src/routes/api/dependencies/results.json
+		const __filename = fileURLToPath(import.meta.url);
+		const resultsFolderPath = path.join(path.dirname(__filename), 'results');
+
+		// Create the results folder if it doesn't exist
+		if (!fs.existsSync(resultsFolderPath)) {
+			fs.mkdirSync(resultsFolderPath);
+		}
+
+		for (const cve of cveSet) {
+			const apiUrl = `https://services.nvd.nist.gov/rest/json/cves/2.0?cveID=${cve}`;
+
+			// Check if the CVE ID already exists in cveResults
+			const existingCve = cveResults.find((result) => result.cveID === cve);
+			if (existingCve) {
+				console.log(`CVE ${cve} is already stored.`);
+				continue; // Skip making the API call
+			}
+
+			const response = await nodeFetch(apiUrl);
+			if (response.ok) {
+				const result = await response.json();
+				cveResults.push(result);
+
+				// Store the API result in a separate file
+				const cveFilePath = path.join(resultsFolderPath, `${cve}.json`);
+				fs.writeFileSync(cveFilePath, JSON.stringify(result));
+				console.log(`Stored CVE ${cve} result in ${cveFilePath}`);
+			} else {
+				console.error(`Failed to fetch NVD API data for CVE ${cve}`);
+			}
+		}
+
+		// Return the response
+		return new Response(
+			JSON.stringify({ dependencyTree: dependencyTreeString, cveResults: cveList }),
+			{
+				status: 200,
+				headers: {
+					'Content-Type': 'application/json'
+				}
+			}
+		);
+		console.log('CVEs:', cveList);
 
 		return new Response(JSON.stringify({ dependencyTree: dependencyTreeString }), {
 			status: 200,
