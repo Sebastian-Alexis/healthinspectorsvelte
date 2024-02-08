@@ -144,6 +144,21 @@ export async function GET({ url }) {
 		});
 	}
 
+	function findBaseScore(obj) {
+		if (obj && typeof obj === 'object') {
+			for (let key in obj) {
+				if (key === 'baseScore' && typeof obj[key] === 'number') {
+					return obj[key];
+				}
+				let result = findBaseScore(obj[key]);
+				if (result) {
+					return result;
+				}
+			}
+		}
+		return null;
+	}
+
 	try {
 		const { dependencies, cveIds } = await fetchDependenciesRecursively(library, version);
 		let dependencyTreeString = formatDependencyTree(dependencies);
@@ -189,6 +204,7 @@ export async function GET({ url }) {
 
 		for (const cve of cveSet) {
 			const apiUrl = `https://services.nvd.nist.gov/rest/json/cves/2.0?cveID=${cve}`;
+			console.log('Making request to NVD API:', apiUrl);
 
 			// Check if the CVE ID already exists in cveResults
 			const existingCve = cveResults.find((result) => result.cveID === cve);
@@ -210,6 +226,28 @@ export async function GET({ url }) {
 				console.error(`Failed to fetch NVD API data for CVE ${cve}`);
 			}
 		}
+
+		const cveFiles = fs.readdirSync('src/routes/api/dependencies/results');
+		const baseScores = [];
+
+		for (const cveFile of cveFiles) {
+			const filePath = path.join('src/routes/api/dependencies/results', cveFile);
+			const data = fs.readFileSync(filePath, 'utf8');
+			const jsonData = JSON.parse(data);
+
+			const baseScore = findBaseScore(jsonData);
+			if (baseScore !== null) {
+				baseScores.push(baseScore);
+			} else {
+				console.log(`Could not find baseScore in JSON data for ${cveFile}`);
+			}
+		}
+
+		// Calculate the average base score
+		const totalBaseScore = baseScores.reduce((sum, score) => sum + score, 0);
+		const averageBaseScore = Math.round((totalBaseScore / baseScores.length) * 10) / 10;
+
+		console.log('Average Base Score:', averageBaseScore);
 
 		// Return the response
 		return new Response(

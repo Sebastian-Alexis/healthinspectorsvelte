@@ -147,14 +147,15 @@
 	</div>
 </div>
 
-<!-- <div class="p-4 flex px-12">
-
-	<div class="card p-4 w-[38.7rem] h-60 bg-slate-200 drop-shadow-xl mr-4">
-		<article class="prose text-xl">
-			<h1>Vulnerabilities</h1>
+<div class="p-4 flex px-12">
+	<!-- Third Box -->
+	<div class="card p-4 w-1/2 h-60 bg-slate-200 drop-shadow-xl mr-4">
+		<article class="prose flex items-center px-2">
+			<h1 class="label-text prose text-2xl">Third Box</h1>
 		</article>
+		<!-- Content for the third box -->
 	</div>
-</div> -->
+</div>
 
 <style>
 	.dependency-tree {
