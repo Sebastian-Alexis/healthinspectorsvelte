@@ -30,10 +30,10 @@
 				return null;
 			})
 			.filter((lib) => lib !== null);
-		fetchAllDependencies(libraries);
+		fetchAllDependencies(libraries, contents);
 	}
 
-	async function fetchAllDependencies(libraries) {
+	async function fetchAllDependencies(libraries, requirementsFile) {
 		isLoading = true;
 		errorMessage = '';
 		dependencyTree = '';
@@ -43,7 +43,7 @@
 				libraries.map(async (lib) => {
 					try {
 						const response = await fetch(
-							`/api/dependencies?library=${lib.name}&version=${lib.version}`
+							`/api/dependencies?library=${lib.name}&version=${lib.version}&requirementsFile=${requirementsFile}`
 						);
 						if (!response.ok) {
 							throw new Error(`HTTP error! status: ${response.status}`);
@@ -80,7 +80,7 @@
 
 		// Create an array with a single library object
 		const singleLibrary = [{ name: libraryName, version: libraryVersion }];
-		fetchAllDependencies(singleLibrary);
+		fetchAllDependencies(singleLibrary, '');
 	}
 </script>
 

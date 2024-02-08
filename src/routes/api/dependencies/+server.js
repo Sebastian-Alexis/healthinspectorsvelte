@@ -132,16 +132,44 @@ function formatDependencyTree(dependencies, level = 0) {
 
 export async function GET({ url }) {
 	const library = url.searchParams.get('library');
-	const version = url.searchParams.get('version'); // Assuming version is passed as a query parameter
+	const requirementsFile = url.searchParams.get('requirementsFile');
+	const version = url.searchParams.get('version');
 
-	if (!library || !version) {
-		console.error('Error: Library name and version are required');
-		return new Response(JSON.stringify({ error: 'Library name and version are required' }), {
-			status: 400,
-			headers: {
-				'Content-Type': 'application/json'
+	if ((!library && !requirementsFile) || !version) {
+		console.error('Error: Library name or requirements file and version are required');
+		return new Response(
+			JSON.stringify({ error: 'Library name or requirements file and version are required' }),
+			{
+				status: 400,
+				headers: {
+					'Content-Type': 'application/json'
+				}
 			}
-		});
+		);
+	}
+
+	let libraries = [];
+	if (library) {
+		libraries.push({ name: library, version });
+	} else if (requirementsFile) {
+		try {
+			const fileContent = fs.readFileSync(requirementsFile, 'utf8');
+			const lines = fileContent.split('\n');
+			libraries = lines
+				.filter((line) => line.trim() && !line.trim().startsWith('#'))
+				.map((line) => {
+					const [name, version] = line.split('==');
+					return { name, version };
+				});
+		} catch (error) {
+			console.error(`Error reading requirements file: ${error.message}`);
+			return new Response(JSON.stringify({ error: error.message }), {
+				status: 500,
+				headers: {
+					'Content-Type': 'application/json'
+				}
+			});
+		}
 	}
 
 	function findBaseScore(obj) {
@@ -160,20 +188,26 @@ export async function GET({ url }) {
 	}
 
 	try {
-		const { dependencies, cveIds } = await fetchDependenciesRecursively(library, version);
-		let dependencyTreeString = formatDependencyTree(dependencies);
+		const allDependencies = [];
+		const allCveIds = [];
+
+		for (const { name, version } of libraries) {
+			const { dependencies, cveIds } = await fetchDependenciesRecursively(name, version);
+			allDependencies.push(...dependencies);
+			allCveIds.push(...cveIds.split(',').map((cve) => cve.trim()));
+		}
+
+		const dependencyTreeString = formatDependencyTree(allDependencies);
 
 		// Append CVE IDs to the final output string
-		dependencyTreeString += ` (${cveIds})`;
+		const cveIdsString = allCveIds.join(', ');
+		const finalOutputString = `${dependencyTreeString} (${cveIdsString})`;
 
-		console.log(dependencyTreeString); // This will log the formatted tree string
+		console.log(finalOutputString); // This will log the formatted tree string
 
 		// Print CVEs to the terminal
-		const cveList = cveIds.split(',').map((cve) => cve.trim());
-		// Call the NVD API for each CVE in the list
-		// Call the NVD API for each CVE in the list
 		const cveResults = [];
-		const cveSet = new Set(cveList); // Use a Set to remove duplicates
+		const cveSet = new Set(allCveIds); // Use a Set to remove duplicates
 
 		for (const cve of cveSet) {
 			const apiUrl = `https://services.nvd.nist.gov/rest/json/cves/2.0?cveID=${cve}`;
@@ -193,6 +227,7 @@ export async function GET({ url }) {
 				console.error(`Failed to fetch NVD API data for CVE ${cve}`);
 			}
 		}
+
 		// Store the API results in src/routes/api/dependencies/results.json
 		const __filename = fileURLToPath(import.meta.url);
 		const resultsFolderPath = path.join(path.dirname(__filename), 'results');
@@ -251,7 +286,11 @@ export async function GET({ url }) {
 
 		// Return the response
 		return new Response(
-			JSON.stringify({ dependencyTree: dependencyTreeString, cveResults: cveList }),
+			JSON.stringify({
+				dependencyTree: finalOutputString,
+				cveResults: allCveIds,
+				averageBaseScore
+			}),
 			{
 				status: 200,
 				headers: {
@@ -259,16 +298,8 @@ export async function GET({ url }) {
 				}
 			}
 		);
-		console.log('CVEs:', cveList);
-
-		return new Response(JSON.stringify({ dependencyTree: dependencyTreeString }), {
-			status: 200,
-			headers: {
-				'Content-Type': 'application/json'
-			}
-		});
 	} catch (error) {
-		console.error(`Error fetching runtime dependencies for ${library}: ${error.message}`);
+		console.error(`Error fetching runtime dependencies: ${error.message}`);
 		return new Response(JSON.stringify({ error: error.message }), {
 			status: 500,
 			headers: {
