@@ -130,7 +130,32 @@ function formatDependencyTree(dependencies, level = 0) {
 		.join('\n');
 }
 
+// Function to delete all files in a directory
+function deleteFilesInDirectory(directory) {
+	if (fs.existsSync(directory)) {
+		fs.readdir(directory, (err, files) => {
+			if (err) throw err;
+
+			for (const file of files) {
+				fs.unlink(path.join(directory, file), (err) => {
+					if (err) {
+						if (err.code === 'ENOENT') {
+							console.log(`File ${file} does not exist.`);
+						} else {
+							throw err;
+						}
+					}
+				});
+			}
+		});
+	} else {
+		console.log(`Directory ${directory} does not exist.`);
+	}
+}
+
 export async function GET({ url }) {
+	deleteFilesInDirectory('src/routes/api/dependencies/results');
+	// Move the rest of the code here
 	const library = url.searchParams.get('library');
 	const requirementsFile = url.searchParams.get('requirementsFile');
 	const version = url.searchParams.get('version');
@@ -148,6 +173,7 @@ export async function GET({ url }) {
 		);
 	}
 
+	// Rest of the code...
 	let libraries = [];
 	if (library) {
 		libraries.push({ name: library, version });
