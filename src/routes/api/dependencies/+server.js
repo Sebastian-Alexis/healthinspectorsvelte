@@ -173,29 +173,17 @@ export async function GET({ url }) {
 		);
 	}
 
-	// Rest of the code...
 	let libraries = [];
 	if (library) {
 		libraries.push({ name: library, version });
 	} else if (requirementsFile) {
-		try {
-			const fileContent = fs.readFileSync(requirementsFile, 'utf8');
-			const lines = fileContent.split('\n');
-			libraries = lines
-				.filter((line) => line.trim() && !line.trim().startsWith('#'))
-				.map((line) => {
-					const [name, version] = line.split('==');
-					return { name, version };
-				});
-		} catch (error) {
-			console.error(`Error reading requirements file: ${error.message}`);
-			return new Response(JSON.stringify({ error: error.message }), {
-				status: 500,
-				headers: {
-					'Content-Type': 'application/json'
-				}
+		const lines = requirementsFile.split('\n');
+		libraries = lines
+			.filter((line) => line.trim() && !line.trim().startsWith('#'))
+			.map((line) => {
+				const [name, version] = line.split('==');
+				return { name, version };
 			});
-		}
 	}
 
 	function findBaseScore(obj) {

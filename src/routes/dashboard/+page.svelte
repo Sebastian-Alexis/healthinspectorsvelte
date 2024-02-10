@@ -1,13 +1,13 @@
 <script>
-	import { onMount } from 'svelte';
 	let libraryName = '';
 	let libraryVersion = '';
 	let isLoading = false;
 	let errorMessage = '';
 	let dependencyTree = '';
-	let fileInput;
+	let averageBaseScore = '';
 
 	function handleFileChange(event) {
+		console.log('File change event: ', event);
 		const file = event.target.files[0];
 		if (file) {
 			const reader = new FileReader();
@@ -20,6 +20,7 @@
 	}
 
 	function processFileContents(contents) {
+		console.log('File contents:', contents);
 		const lines = contents.split('\n');
 		const libraries = lines
 			.map((line) => {
@@ -34,6 +35,8 @@
 	}
 
 	async function fetchAllDependencies(libraries, requirementsFile) {
+		console.log('Fetching dependencies for:', libraries);
+		console.log('Requirements file:', requirementsFile);
 		isLoading = true;
 		errorMessage = '';
 		dependencyTree = '';
@@ -49,6 +52,7 @@
 							throw new Error(`HTTP error! status: ${response.status}`);
 						}
 						const data = await response.json();
+						averageBaseScore = data.averageBaseScore;
 						// Format the dependency tree with an indent for dependencies
 						const formattedDependencyTree = data.dependencyTree
 							.split('\n')
@@ -127,7 +131,6 @@
 			<input
 				type="file"
 				class="file-input file-input-bordered w-full max-w-xs"
-				bind:this={fileInput}
 				on:change={handleFileChange}
 			/>
 		</label>
@@ -151,9 +154,9 @@
 	<!-- Third Box -->
 	<div class="card p-4 w-1/2 h-60 bg-slate-200 drop-shadow-xl mr-4">
 		<article class="prose flex items-center px-2">
-			<h1 class="label-text prose text-2xl">Third Box</h1>
+			<h1 class="label-text prose text-2xl">Average Base Score</h1>
 		</article>
-		<!-- Content for the third box -->
+		<p>{averageBaseScore}</p>
 	</div>
 </div>
 
