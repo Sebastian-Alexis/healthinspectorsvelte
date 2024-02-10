@@ -280,6 +280,13 @@ export async function GET({ url }) {
 		const baseScores = [];
 
 		for (const cveFile of cveFiles) {
+			// If the file is named ".json", delete it and continue with the next file
+			if (cveFile === '.json') {
+				fs.unlinkSync(path.join('src/routes/api/dependencies/results', cveFile));
+				console.log(`Deleted file: ${cveFile}`);
+				continue;
+			}
+
 			const filePath = path.join('src/routes/api/dependencies/results', cveFile);
 			const data = fs.readFileSync(filePath, 'utf8');
 			const jsonData = JSON.parse(data);
