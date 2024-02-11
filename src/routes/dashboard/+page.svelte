@@ -7,6 +7,8 @@
 	let averageBaseScore = '';
 	let numberOfBaseScores = '';
 	let basescoreList = '';
+	let baseScores = '';
+	let roundedAverageScore = '';
 
 	function handleFileChange(event) {
 		console.log('File change event: ', event);
@@ -56,7 +58,7 @@
 						const data = await response.json();
 						averageBaseScore = data.averageBaseScore;
 						numberOfBaseScores = data.numberOfBaseScores;
-						let baseScores = data.basescoreList;
+						baseScores = data.baseScores;
 
 						// Format the dependency tree with an indent for dependencies
 						const formattedDependencyTree = data.dependencyTree
@@ -86,9 +88,17 @@
 			console.log('Number of libraries:', numberOfLibraries);
 			console.log('Number of vulnerable libraries:', numberOfVulnerableLibraries);
 			//subtract the number of vulnerable libraries from the total number of libraries and make a variable called numberOfSafeLibraries
-
 			const numberOfSafeLibraries = numberOfLibraries - numberOfVulnerableLibraries;
 			console.log('Number of safe libraries:', numberOfSafeLibraries);
+			console.log('Base Score list:', baseScores);
+			const safeList = Array(numberOfSafeLibraries).fill(0);
+			console.log('Safe list:', safeList);
+			const averageList = [...baseScores, ...safeList];
+			console.log('Average list:', averageList);
+			const averageScore = averageList.reduce((sum, score) => sum + score, 0) / averageList.length;
+			roundedAverageScore = Math.round(averageScore * 10) / 10;
+
+			console.log('Average score:', roundedAverageScore);
 		} catch (error) {
 			console.error('Error in processing dependencies:', error);
 			errorMessage = 'Failed to process dependencies';
@@ -199,7 +209,11 @@
 
 				<div class="stat place-items-center px-4">
 					<div class="stat-title">Project Score</div>
-					<div class="stat-value">1,200</div>
+					{#if roundedAverageScore}
+						<div class="stat-value">{roundedAverageScore}</div>
+					{:else}
+						<span class="loading loading-ring loading-md"></span>
+					{/if}
 					<div class="stat-desc">Comprehensive Score</div>
 				</div>
 			</div>

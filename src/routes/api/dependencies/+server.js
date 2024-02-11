@@ -26,6 +26,20 @@ async function fetchRuntimeDependencies(library, version) {
 			throw new Error(`Failed to fetch Libraries.io data for ${library}`);
 		}
 		const data = await response.json();
+
+		// Save the response data to a file
+		const __filename = fileURLToPath(import.meta.url);
+		const dependencyResultPath = path.join(path.dirname(__filename), 'dependency_result');
+		const filePath = path.join(dependencyResultPath, `${library}-${version}.json`);
+
+		// Create the dependency_result folder if it doesn't exist
+		if (!fs.existsSync(dependencyResultPath)) {
+			fs.mkdirSync(dependencyResultPath);
+		}
+
+		// Write the data to the file
+		fs.writeFileSync(filePath, JSON.stringify(data));
+
 		return data.dependencies
 			.filter((dep) => dep.kind === 'runtime')
 			.map((dep) => ({
