@@ -24,6 +24,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"event": "^1.0.0",
 		"fetch-cookie": "^2.2.0",
 		"lodash": "^4.17.21",
 		"node-fetch": "^3.3.2",

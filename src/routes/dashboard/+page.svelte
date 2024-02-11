@@ -5,6 +5,8 @@
 	let errorMessage = '';
 	let dependencyTree = '';
 	let averageBaseScore = '';
+	let numberOfBaseScores = '';
+	let basescoreList = '';
 
 	function handleFileChange(event) {
 		console.log('File change event: ', event);
@@ -53,6 +55,9 @@
 						}
 						const data = await response.json();
 						averageBaseScore = data.averageBaseScore;
+						numberOfBaseScores = data.numberOfBaseScores;
+						let baseScores = data.basescoreList;
+
 						// Format the dependency tree with an indent for dependencies
 						const formattedDependencyTree = data.dependencyTree
 							.split('\n')
@@ -65,8 +70,25 @@
 					}
 				})
 			);
-
 			dependencyTree = results.join('\n\n'); // Add an extra line break between libraries
+			//send formattedDependencyTree to the server.js file
+			const countLibraries = (formattedDependencyTree) => {
+				const libraryCount = (formattedDependencyTree.match(/ - /g) || []).length;
+				return libraryCount;
+			};
+			const countVulnerableLibraries = (formattedDependencyTree) => {
+				const libraryCount = (formattedDependencyTree.match(/\(CVE/g) || []).length;
+				return libraryCount;
+			};
+
+			const numberOfLibraries = countLibraries(dependencyTree);
+			const numberOfVulnerableLibraries = countVulnerableLibraries(dependencyTree);
+			console.log('Number of libraries:', numberOfLibraries);
+			console.log('Number of vulnerable libraries:', numberOfVulnerableLibraries);
+			//subtract the number of vulnerable libraries from the total number of libraries and make a variable called numberOfSafeLibraries
+
+			const numberOfSafeLibraries = numberOfLibraries - numberOfVulnerableLibraries;
+			console.log('Number of safe libraries:', numberOfSafeLibraries);
 		} catch (error) {
 			console.error('Error in processing dependencies:', error);
 			errorMessage = 'Failed to process dependencies';
@@ -136,10 +158,8 @@
 		</label>
 	</div>
 
-	<div class="w-[6rem]"></div>
-
 	<!-- Second Box -->
-	<div class="card p-4 w-1/2 h-auto bg-slate-200 drop-shadow-xl">
+	<div class="card p-4 w-1/2 h-60 bg-slate-200 drop-shadow-xl overflow-auto">
 		{#if errorMessage}
 			<p class="text-red-500">{errorMessage}</p>
 		{/if}
@@ -149,10 +169,47 @@
 		{/if}
 	</div>
 </div>
-
 <div class="p-4 flex px-12">
 	<!-- Third Box -->
 	<div class="card p-4 w-1/2 h-60 bg-slate-200 drop-shadow-xl mr-4">
+		<article class="prose flex items-center px-2">
+			<h1 class="label-text prose text-2xl">Average Base Score</h1>
+		</article>
+		<div class="pt-6">
+			<div class="stats shadow">
+				<div class="stat place-items-center px-4">
+					<div class="stat-title">Vulnerabilites</div>
+					{#if numberOfBaseScores}
+						<div class="stat-value">{numberOfBaseScores}</div>
+					{:else}
+						<span class="loading loading-ring loading-md"></span>
+					{/if}
+					<div class="stat-desc">With Transitive Dependencies</div>
+				</div>
+
+				<div class="stat place-items-center px-4">
+					<div class="stat-title">Vulnerability Score</div>
+					{#if averageBaseScore}
+						<div class="stat-value text-secondary">{averageBaseScore}</div>
+					{:else}
+						<span class="loading loading-ring loading-md"></span>
+					{/if}
+					<div class="stat-desc text-secondary">Average of all CVE's</div>
+				</div>
+
+				<div class="stat place-items-center px-4">
+					<div class="stat-title">Project Score</div>
+					<div class="stat-value">1,200</div>
+					<div class="stat-desc">Comprehensive Score</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- <div class="w-6rem"></div> -->
+
+	<!-- Fourth Box -->
+	<div class="card p-4 w-1/2 h-60 bg-slate-200 drop-shadow-xl">
 		<article class="prose flex items-center px-2">
 			<h1 class="label-text prose text-2xl">Average Base Score</h1>
 		</article>

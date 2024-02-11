@@ -90,6 +90,13 @@ async function fetchDependenciesRecursively(library, version, depth = 0) {
 				? vulnerabilityResponse.vulns
 				: [];
 
+			// Calculate baseScore for each dependency
+			dep.baseScore =
+				dep.vulnerabilities.length > 0
+					? dep.vulnerabilities.reduce((sum, vuln) => sum + (vuln.baseScore || 0), 0) /
+					  dep.vulnerabilities.length
+					: 0;
+
 			if (typeof dep.latest_stable === 'string' && dep.latest_stable) {
 				dep.dependencies = await fetchDependenciesRecursively(
 					dep.name,
@@ -300,17 +307,27 @@ export async function GET({ url }) {
 		}
 
 		// Calculate the average base score
+		// print all base scores
+		const formattedDependencyTree = '';
+		// Define the event variable
+		// Receive FormattedDependencyTree from page.svelte
 		const totalBaseScore = baseScores.reduce((sum, score) => sum + score, 0);
 		const averageBaseScore = Math.round((totalBaseScore / baseScores.length) * 10) / 10;
+		const numberOfBaseScores = fs.readdirSync('src/routes/api/dependencies/results').length;
+
+		console.log('Number of Base Scores:', numberOfBaseScores);
 
 		console.log('Average Base Score:', averageBaseScore);
+		console.log('All Base Scores:', baseScores);
 
 		// Return the response
 		return new Response(
 			JSON.stringify({
 				dependencyTree: finalOutputString,
 				cveResults: allCveIds,
-				averageBaseScore
+				averageBaseScore,
+				numberOfBaseScores,
+				baseScores
 			}),
 			{
 				status: 200,
