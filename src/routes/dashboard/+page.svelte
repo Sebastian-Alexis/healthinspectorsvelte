@@ -7,8 +7,45 @@
 	let averageBaseScore = '';
 	let numberOfBaseScores = '';
 	let basescoreList = '';
+	let repoUrl = '';
 	let baseScores = '';
 	let roundedAverageScore = '';
+
+	async function handleUrlSubmit() {
+		console.log('URL submit event: ', repoUrl);
+		if (repoUrl) {
+			try {
+				const response = await fetch(`/api/download?repoUrl=${repoUrl}`);
+				if (!response.ok) {
+					throw new Error(`HTTP error! status: ${response.status}`);
+				}
+				const data = await response.json(); // Parse the JSON response
+				console.log('Repository downloaded successfully!');
+
+				// Assuming the server responds with an object containing the requirementsFile property
+				const requirementsContent = data.requirementsFile;
+				console.log('Requirements.txt content:', requirementsContent);
+
+				console.log('File contents:', requirementsContent);
+				const lines = requirementsContent.split('\n');
+				const libraries = lines
+					.map((line) => {
+						const parts = line.split('==');
+						if (parts.length === 2 && parts[0] && parts[1]) {
+							return { name: parts[0], version: parts[1] };
+						}
+						return null;
+					})
+					.filter((lib) => lib !== null);
+				fetchAllDependencies(libraries, requirementsContent);
+
+				// Here you can do further processing with requirementsContent
+				// For example, displaying it on the page, further parsing, etc.
+			} catch (error) {
+				console.error('Error downloading repo:', error);
+			}
+		}
+	}
 
 	function handleFileChange(event) {
 		console.log('File change event: ', event);
@@ -88,7 +125,9 @@
 			console.log('Number of libraries:', numberOfLibraries);
 			console.log('Number of vulnerable libraries:', numberOfVulnerableLibraries);
 			//subtract the number of vulnerable libraries from the total number of libraries and make a variable called numberOfSafeLibraries
+
 			const numberOfSafeLibraries = numberOfLibraries - numberOfVulnerableLibraries;
+
 			console.log('Number of safe libraries:', numberOfSafeLibraries);
 			console.log('Base Score list:', baseScores);
 			const safeList = Array(numberOfSafeLibraries).fill(0);
@@ -157,14 +196,18 @@
 		<label class="form-controls">
 			<div class="label">
 				<article class="prose flex">
-					<h1 class="label-text prose text-2xl">Or, Pick A requirements.txt File</h1>
+					<h1 class="label-text prose text-2xl">Or, Enter A GitHub Repo URL</h1>
 				</article>
 			</div>
-			<input
-				type="file"
-				class="file-input file-input-bordered w-full max-w-xs"
-				on:change={handleFileChange}
-			/>
+			<div class="flex gap-2 pt-2 px-2">
+				<input
+					type="text"
+					placeholder="Enter GitHub repo URL"
+					class="input input-bordered w-full max-w-xs"
+					bind:value={repoUrl}
+				/>
+				<button class="btn btn-primary" on:click={handleUrlSubmit}>Submit</button>
+			</div>
 		</label>
 	</div>
 

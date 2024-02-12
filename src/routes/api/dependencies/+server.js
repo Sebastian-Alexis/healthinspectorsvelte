@@ -1,7 +1,8 @@
-import nodeFetch from 'node-fetch';
 import fs from 'fs';
 import path from 'path';
+import nodeFetch from 'node-fetch';
 import { fileURLToPath } from 'url';
+import { execSync } from 'child_process';
 
 const LIBRARIES_IO_API_KEYS = [
 	'7165ca9cc733d1abd00a87a930d9d714',
@@ -184,9 +185,9 @@ export async function GET({ url }) {
 	const version = url.searchParams.get('version');
 
 	if ((!library && !requirementsFile) || !version) {
-		console.error('Error: Library name or requirements file and version are required');
+		console.error('Error: Library name or requirements file and version are requiredttttt');
 		return new Response(
-			JSON.stringify({ error: 'Library name or requirements file and version are required' }),
+			JSON.stringify({ error: 'Library name or requirements file and version are requiredsssss' }),
 			{
 				status: 400,
 				headers: {
@@ -346,7 +347,28 @@ export async function GET({ url }) {
 		}
 		console.log(sbomlibraries);
 
-		// Return the response
+		const sourceCodeDirectory = 'src/routes/api/dependencies/sourcecode';
+		const directories = fs
+			.readdirSync(sourceCodeDirectory, { withFileTypes: true })
+			.filter((dirent) => dirent.isDirectory())
+			.map((dirent) => dirent.name);
+
+		console.log('Directories:', directories);
+
+		console.log('Directory:', directories[0]);
+		const sourceCodePath = path.join('src/routes/api/dependencies/sourcecode', directories[0]);
+		console.log('Source Code Directory:', sourceCodePath);
+		// Change the current working directory to sourceCodePath
+		try {
+			// Change the current working directory to sourceCodePath
+			process.chdir(sourceCodePath);
+
+			// Run the command "cdxgen -o bom.json"
+			execSync('cdxgen -o bom.json', { stdio: 'inherit' });
+		} catch (error) {
+			console.error(`Error running command: ${error.message}`);
+		}
+
 		return new Response(
 			JSON.stringify({
 				dependencyTree: finalOutputString,
@@ -364,6 +386,7 @@ export async function GET({ url }) {
 		);
 	} catch (error) {
 		console.error(`Error fetching runtime dependencies: ${error.message}`);
+		console.log('from server.js');
 		return new Response(JSON.stringify({ error: error.message }), {
 			status: 500,
 			headers: {
