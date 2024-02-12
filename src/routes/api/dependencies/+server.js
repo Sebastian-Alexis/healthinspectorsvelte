@@ -176,6 +176,8 @@ function deleteFilesInDirectory(directory) {
 
 export async function GET({ url }) {
 	deleteFilesInDirectory('src/routes/api/dependencies/results');
+	deleteFilesInDirectory('src/routes/api/dependencies/dependency_result');
+
 	// Move the rest of the code here
 	const library = url.searchParams.get('library');
 	const requirementsFile = url.searchParams.get('requirementsFile');
@@ -333,6 +335,16 @@ export async function GET({ url }) {
 
 		console.log('Average Base Score:', averageBaseScore);
 		console.log('All Base Scores:', baseScores);
+
+		const directoryPath = 'src/routes/api/dependencies/dependency_result'; // Replace with your directory path
+		const files = fs.readdirSync(directoryPath);
+
+		let sbomlibraries = [];
+		for (const file of files) {
+			const [name, version] = file.split('-'); // Assumes file name is in the format 'name-version.json'
+			sbomlibraries.push({ name, version });
+		}
+		console.log(sbomlibraries);
 
 		// Return the response
 		return new Response(

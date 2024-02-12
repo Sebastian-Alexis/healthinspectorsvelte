@@ -1,0 +1,43 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "serialNumber": "urn:uuid:fc46cd2a-7f94-4a10-b5dc-1870ac6cddaa",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2024-02-12T02:54:06.249Z",
+    "tools": {
+      "components": [
+        {
+          "group": "@cyclonedx",
+          "name": "cdxgen",
+          "version": "10.0.6",
+          "purl": "pkg:npm/%40cyclonedx/cdxgen@10.0.6",
+          "type": "application",
+          "bom-ref": "pkg:npm/@cyclonedx/cdxgen@10.0.6",
+          "author": "OWASP Foundation",
+          "publisher": "OWASP Foundation"
+        }
+      ]
+    },
+    "authors": [
+      {
+        "name": "OWASP Foundation"
+      }
+    ],
+    "lifecycles": [
+      {
+        "phase": "build"
+      }
+    ],
+    "component": {
+      "group": "",
+      "name": "requirements.txt",
+      "version": "latest",
+      "type": "application",
+      "bom-ref": "pkg:pypi/requirements.txt@latest",
+      "purl": "pkg:pypi/requirements.txt@latest"
+    }
+  },
+  "components": [],
+  "dependencies": []
+}
