@@ -11,6 +11,24 @@
 	let baseScores = '';
 	let roundedAverageScore = '';
 
+	import download from 'downloadjs';
+
+	async function generatesbom() {
+		try {
+			const response = await fetch('/api/sbom');
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+			const sbomJson = await response.json();
+			const sbomString = JSON.stringify(sbomJson);
+			console.log(sbomString);
+			const sbomBlob = new Blob([sbomString], { type: 'application/json' });
+			download(sbomBlob, 'sbom.json');
+		} catch (error) {
+			console.error('Error:', error);
+		}
+	}
+
 	async function handleUrlSubmit() {
 		console.log('URL submit event: ', repoUrl);
 		if (repoUrl) {
@@ -270,7 +288,7 @@
 		<article class="prose flex items-center px-2">
 			<h1 class="label-text prose text-2xl">Average Base Score</h1>
 		</article>
-		<p>{averageBaseScore}</p>
+		<button class="btn btn-primary mx-auto my-auto" on:click={generatesbom}>Download SBOM</button>
 	</div>
 </div>
 

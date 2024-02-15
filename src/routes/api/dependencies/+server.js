@@ -175,9 +175,19 @@ function deleteFilesInDirectory(directory) {
 	}
 }
 
+function deleteFile(filePath) {
+	if (fs.existsSync(filePath)) {
+		fs.unlinkSync(filePath);
+		console.log(`Deleted file: ${filePath}`);
+	} else {
+		console.log(`File ${filePath} does not exist.`);
+	}
+}
+
 export async function GET({ url }) {
 	deleteFilesInDirectory('src/routes/api/dependencies/results');
 	deleteFilesInDirectory('src/routes/api/dependencies/dependency_result');
+	deleteFile('src/routes/api/sbom/sbom.json');
 
 	// Move the rest of the code here
 	const library = url.searchParams.get('library');
@@ -359,15 +369,6 @@ export async function GET({ url }) {
 		const sourceCodePath = path.join('src/routes/api/dependencies/sourcecode', directories[0]);
 		console.log('Source Code Directory:', sourceCodePath);
 		// Change the current working directory to sourceCodePath
-		try {
-			// Change the current working directory to sourceCodePath
-			process.chdir(sourceCodePath);
-
-			// Run the command "cdxgen -o bom.json"
-			execSync('cdxgen -o bom.json', { stdio: 'inherit' });
-		} catch (error) {
-			console.error(`Error running command: ${error.message}`);
-		}
 
 		return new Response(
 			JSON.stringify({

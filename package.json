@@ -24,9 +24,11 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"downloadjs": "^1.4.7",
 		"event": "^1.0.0",
 		"execSync": "^1.0.2",
 		"fetch-cookie": "^2.2.0",
+		"file-saver": "^2.0.5",
 		"fs-extra": "^11.2.0",
 		"lodash": "^4.17.21",
 		"node-fetch": "^3.3.2",
