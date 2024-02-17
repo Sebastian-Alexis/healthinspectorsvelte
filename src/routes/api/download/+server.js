@@ -6,7 +6,41 @@ import fsExtra from 'fs-extra';
 
 const execAsync = promisify(exec);
 
+function deleteFilesInDirectory(directory) {
+	if (fs.existsSync(directory)) {
+		fs.readdir(directory, (err, files) => {
+			if (err) throw err;
+
+			for (const file of files) {
+				fs.unlink(path.join(directory, file), (err) => {
+					if (err) {
+						if (err.code === 'ENOENT') {
+							console.log(`File ${file} does not exist.`);
+						} else {
+							throw err;
+						}
+					}
+				});
+			}
+		});
+	} else {
+		console.log(`Directory ${directory} does not exist.`);
+	}
+}
+
+function deleteFile(filePath) {
+	if (fs.existsSync(filePath)) {
+		fs.unlinkSync(filePath);
+		console.log(`Deleted file: ${filePath}`);
+	} else {
+		console.log(`File ${filePath} does not exist.`);
+	}
+}
+
 export async function GET({ url }) {
+	deleteFilesInDirectory('src/routes/api/dependencies/results');
+	deleteFilesInDirectory('src/routes/api/dependencies/dependency_result');
+	deleteFile('src/routes/api/sbom/sbom.json');
 	const sourceCodeDir = 'src/routes/api/dependencies/sourcecode';
 
 	try {

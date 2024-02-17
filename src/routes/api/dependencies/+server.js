@@ -90,11 +90,13 @@ async function fetchDependenciesRecursively(library, version, depth = 0) {
 		console.log(`Vulnerability response for ${library}:`, vulnerabilityResponse);
 
 		const vulns = Array.isArray(vulnerabilityResponse.vulns) ? vulnerabilityResponse.vulns : [];
-		const cveIds = vulns
-			.flatMap((vuln) =>
-				vuln.aliases ? vuln.aliases.filter((alias) => alias.startsWith('CVE-')) : []
+		const cveIds = [
+			...new Set(
+				vulns.flatMap((vuln) =>
+					vuln.aliases ? vuln.aliases.filter((alias) => alias.startsWith('CVE-')) : []
+				)
 			)
-			.join(', ');
+		].join(', ');
 
 		const dependencies = await fetchRuntimeDependencies(library, version);
 		console.log(`Fetched dependencies for ${library}:`, dependencies);
@@ -102,14 +104,14 @@ async function fetchDependenciesRecursively(library, version, depth = 0) {
 		for (const dep of dependencies) {
 			const vulnerabilityResponse = await checkVulnerabilities(dep.name, dep.latest_stable);
 			dep.vulnerabilities = Array.isArray(vulnerabilityResponse.vulns)
-				? vulnerabilityResponse.vulns
+				? [...new Set(vulnerabilityResponse.vulns)] // Use a Set to remove duplicates
 				: [];
 
 			// Calculate baseScore for each dependency
 			dep.baseScore =
 				dep.vulnerabilities.length > 0
 					? dep.vulnerabilities.reduce((sum, vuln) => sum + (vuln.baseScore || 0), 0) /
-					  dep.vulnerabilities.length
+						dep.vulnerabilities.length
 					: 0;
 
 			if (typeof dep.latest_stable === 'string' && dep.latest_stable) {
@@ -122,7 +124,7 @@ async function fetchDependenciesRecursively(library, version, depth = 0) {
 				dep.dependencies = [];
 			}
 		}
-
+		console.log('CVEIDS', cveIds);
 		return { dependencies, cveIds }; // Return both dependencies and CVE IDs
 	} catch (error) {
 		console.error(`Error in recursive dependency fetching for ${library}: ${error.message}`);
@@ -136,15 +138,19 @@ function formatDependencyTree(dependencies, level = 0) {
 			if (!dep.name || !dep.latest_stable) {
 				return ''; // Skip this dependency
 			}
-
+			console.log('VULNERABILITIES: ', dep.vulnerabilities);
 			const cveIds = dep.vulnerabilities
 				.flatMap((vuln) => vuln.aliases.filter((alias) => alias.startsWith('CVE-')))
+				.filter((alias) => alias.length > 0) // Filter out empty arrays
 				.join(', ');
 
+			const uniqueCveIds = [...new Set(cveIds.split(',').map((cve) => cve.trim()))];
+			dep.cveIds = uniqueCveIds.join(', ');
+			console.log('DEPENDENCY LIST: ', dep.cveIds);
 			const prefix = ' '.repeat(level * 2);
 			const subDeps =
 				dep.dependencies.length > 0 ? `\n${formatDependencyTree(dep.dependencies, level + 1)}` : '';
-			const cveString = cveIds ? ` (CVEs: ${cveIds})` : '';
+			const cveString = dep.cveIds ? ` (CVEs: ${dep.cveIds})` : '';
 
 			return `${prefix}${dep.name} - ${dep.latest_stable}${cveString}${subDeps}`;
 		})
@@ -185,9 +191,9 @@ function deleteFile(filePath) {
 }
 
 export async function GET({ url }) {
-	deleteFilesInDirectory('src/routes/api/dependencies/results');
-	deleteFilesInDirectory('src/routes/api/dependencies/dependency_result');
-	deleteFile('src/routes/api/sbom/sbom.json');
+	// deleteFilesInDirectory('src/routes/api/dependencies/results');
+	// deleteFilesInDirectory('src/routes/api/dependencies/dependency_result');
+	// deleteFile('src/routes/api/sbom/sbom.json');
 
 	// Move the rest of the code here
 	const library = url.searchParams.get('library');
