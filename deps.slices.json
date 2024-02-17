@@ -1,0 +1,40 @@
+{
+  "modules" : [
+    {
+      "name" : "argparse",
+      "version" : "",
+      "versionSpecifiers" : "",
+      "importedSymbols" : "argparse"
+    },
+    {
+      "name" : "bs4",
+      "version" : "",
+      "versionSpecifiers" : "",
+      "importedSymbols" : "bs4.BeautifulSoup"
+    },
+    {
+      "name" : "os",
+      "version" : "",
+      "versionSpecifiers" : "",
+      "importedSymbols" : "os,os.path.basename"
+    },
+    {
+      "name" : "requests",
+      "version" : "",
+      "versionSpecifiers" : "",
+      "importedSymbols" : "requests"
+    },
+    {
+      "name" : "tqdm",
+      "version" : "",
+      "versionSpecifiers" : "",
+      "importedSymbols" : "tqdm.tqdm"
+    },
+    {
+      "name" : "urllib",
+      "version" : "",
+      "versionSpecifiers" : "",
+      "importedSymbols" : "urllib.request.urlopen,urllib.request.urljoin"
+    }
+  ]
+}

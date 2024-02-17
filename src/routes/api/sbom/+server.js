@@ -1,6 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
 // SvelteKit uses this export pattern for handling requests
 export async function GET() {
@@ -23,27 +25,30 @@ export async function GET() {
 		console.log('Directory:', directories[0]);
 		const sourceCodePath = path.join(sourceCodeDirectory, directories[0]);
 		console.log('Source Code Directory:', sourceCodePath);
+		const rootDirectory = dirname(fileURLToPath(import.meta.url));
+		console.log('Root Directory:', rootDirectory);
+		process.chdir(sourceCodePath);
+		execSync('cdxgen -o', {
+			stdio: 'inherit'
+		});
+		process.chdir('/Users/alexi1/healthinspectorsvelte');
+		const currentCodePath = dirname(fileURLToPath(import.meta.url));
+		console.log('current Code Directory:', currentCodePath);
 
-		try {
-			process.chdir(sourceCodePath);
-			execSync(
-				'cdxgen --output /Users/alexi1/healthinspectorsvelte/src/routes/api/sbom/sbom.json',
-				{
-					stdio: 'inherit'
-				}
-			);
-		} catch (error) {
-			console.error(`Error running command: ${error.message}`);
-			return new Response(`Error generating SBOM: ${error.message}`, { status: 500 });
-		}
+		console.log('SBOM generated successfully');
 
-		// Assuming sbom.json is placed in the same directory as this script after generation
-		const sbomPath = path.join(sourceCodePath, 'sbom.json');
+		// Wait for 3 seconds
+		await new Promise((resolve) => setTimeout(resolve, 3000));
+
+		const sbomPath = path.join(sourceCodePath, '/sbom.json');
+		console.log(sourceCodePath);
+
 		if (!fs.existsSync(sbomPath)) {
-			return new Response('SBOM file not found', { status: 404 });
+			console.log('SBOM file not found', { status: 404 });
 		}
 		const sbomString = fs.readFileSync(sbomPath, 'utf8');
 		const sbomJson = JSON.parse(sbomString);
+		console.log('SBOM:', sbomJson);
 
 		// Return the SBOM JSON in the response
 		return new Response(JSON.stringify(sbomJson), {

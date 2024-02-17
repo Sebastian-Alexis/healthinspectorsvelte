@@ -10,10 +10,12 @@
 	let repoUrl = '';
 	let baseScores = '';
 	let roundedAverageScore = '';
+	let isButtonDisabled = false;
 
 	import download from 'downloadjs';
 
 	async function generatesbom() {
+		isButtonDisabled = true;
 		try {
 			const response = await fetch('/api/sbom');
 			if (!response.ok) {
@@ -24,6 +26,7 @@
 			console.log(sbomString);
 			const sbomBlob = new Blob([sbomString], { type: 'application/json' });
 			download(sbomBlob, 'sbom.json');
+			isButtonDisabled = false;
 		} catch (error) {
 			console.error('Error:', error);
 		}
@@ -286,9 +289,13 @@
 	<!-- Fourth Box -->
 	<div class="card p-4 w-1/2 h-60 bg-slate-200 drop-shadow-xl">
 		<article class="prose flex items-center px-2">
-			<h1 class="label-text prose text-2xl">Average Base Score</h1>
+			<h1 class="label-text prose text-2xl">SBOM</h1>
 		</article>
-		<button class="btn btn-primary mx-auto my-auto" on:click={generatesbom}>Download SBOM</button>
+		<button
+			class="btn btn-primary mx-auto my-auto"
+			on:click={generatesbom}
+			disabled={isButtonDisabled}>Download SBOM</button
+		>
 	</div>
 </div>
 
