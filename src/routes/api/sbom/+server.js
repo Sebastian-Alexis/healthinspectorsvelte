@@ -40,7 +40,7 @@ export async function GET() {
 		// Wait for 3 seconds
 		await new Promise((resolve) => setTimeout(resolve, 3000));
 
-		const sbomPath = path.join(sourceCodePath, '/sbom.json');
+		const sbomPath = path.join(sourceCodePath, '/bom.json');
 		console.log(sourceCodePath);
 
 		if (!fs.existsSync(sbomPath)) {

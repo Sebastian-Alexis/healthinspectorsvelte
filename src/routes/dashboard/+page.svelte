@@ -227,7 +227,7 @@
 					class="input input-bordered w-full max-w-xs"
 					bind:value={repoUrl}
 				/>
-				<button class="btn btn-primary" on:click={handleUrlSubmit}>Submit</button>
+				<button class="btn btn-primary" on:click={handleUrlSubmit} disabled={isLoading}>Submit</button>
 			</div>
 		</label>
 	</div>
@@ -294,7 +294,7 @@
 		<button
 			class="btn btn-primary mx-auto my-auto"
 			on:click={generatesbom}
-			disabled={isButtonDisabled}>Download SBOM</button
+			disabled={isButtonDisabled, isLoading}>Download SBOM</button
 		>
 	</div>
 </div>
