@@ -1,8 +1,8 @@
-import fs from 'fs';
+import fs from 'node:fs';
 import path from 'path';
 import nodeFetch from 'node-fetch';
 import { fileURLToPath } from 'url';
-import { execSync } from 'child_process';
+import { execSync } from 'node:child_process';
 
 const LIBRARIES_IO_API_KEYS = [
 	'7165ca9cc733d1abd00a87a930d9d714',

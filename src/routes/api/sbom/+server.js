@@ -1,6 +1,6 @@
-import fs from 'fs';
+import fs from 'node:fs';
 import path from 'path';
-import { execSync } from 'child_process';
+import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
@@ -28,6 +28,7 @@ export async function GET() {
 		const rootDirectory = dirname(fileURLToPath(import.meta.url));
 		console.log('Root Directory:', rootDirectory);
 		process.chdir(sourceCodePath);
+
 		execSync('cdxgen -o', {
 			stdio: 'inherit'
 		});
