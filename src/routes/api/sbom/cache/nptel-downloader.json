@@ -1,0 +1,359 @@
+{
+    "cleanedDependencyTree": "pkg:pypi/nptel-downloader@latest \n pkg:pypi/beautifulsoup4@4.11.1 \n └ pkg:pypi/soupsieve@2.3.2.post1 \n pkg:pypi/chardet@5.0.0 \n pkg:pypi/requests@2.28.1 \n ├ pkg:pypi/certifi@2022.6.15 \n ├ pkg:pypi/charset-normalizer@2.1.1 \n ├ pkg:pypi/idna@3.3 \n └ pkg:pypi/urllib3@1.26.12 \n pkg:pypi/tqdm@4.64.1 \n └ pkg:pypi/colorama@0.4.6",
+    "sbom": {
+        "bomFormat": "CycloneDX",
+        "components": [
+            {
+                "bom-ref": "pkg:pypi/beautifulsoup4@4.11.1",
+                "evidence": {
+                    "identity": {
+                        "confidence": 1,
+                        "field": "purl",
+                        "methods": [
+                            {
+                                "confidence": 1,
+                                "technique": "instrumentation",
+                                "value": "C:\\Users\\sebas\\AppData\\Local\\Temp\\cdxgen-venv-pSgwhq"
+                            }
+                        ]
+                    }
+                },
+                "group": "",
+                "name": "beautifulsoup4",
+                "purl": "pkg:pypi/beautifulsoup4@4.11.1",
+                "type": "library",
+                "version": "4.11.1"
+            },
+            {
+                "bom-ref": "pkg:pypi/soupsieve@2.3.2.post1",
+                "evidence": {
+                    "identity": {
+                        "confidence": 0.8,
+                        "field": "purl",
+                        "methods": [
+                            {
+                                "confidence": 0.8,
+                                "technique": "manifest-analysis",
+                                "value": "C:\\Users\\sebas\\Programming\\healthinspectorsvelte\\src\\routes\\api\\dependencies\\sourcecode\\nptel-downloader\\requirements.txt"
+                            }
+                        ]
+                    }
+                },
+                "group": "",
+                "name": "soupsieve",
+                "properties": [
+                    {
+                        "name": "SrcFile",
+                        "value": "C:\\Users\\sebas\\Programming\\healthinspectorsvelte\\src\\routes\\api\\dependencies\\sourcecode\\nptel-downloader\\requirements.txt"
+                    }
+                ],
+                "purl": "pkg:pypi/soupsieve@2.3.2.post1",
+                "type": "library",
+                "version": "2.3.2.post1"
+            },
+            {
+                "bom-ref": "pkg:pypi/chardet@5.0.0",
+                "evidence": {
+                    "identity": {
+                        "confidence": 1,
+                        "field": "purl",
+                        "methods": [
+                            {
+                                "confidence": 1,
+                                "technique": "instrumentation",
+                                "value": "C:\\Users\\sebas\\AppData\\Local\\Temp\\cdxgen-venv-pSgwhq"
+                            }
+                        ]
+                    }
+                },
+                "group": "",
+                "name": "chardet",
+                "purl": "pkg:pypi/chardet@5.0.0",
+                "type": "library",
+                "version": "5.0.0"
+            },
+            {
+                "bom-ref": "pkg:pypi/requests@2.28.1",
+                "evidence": {
+                    "identity": {
+                        "confidence": 1,
+                        "field": "purl",
+                        "methods": [
+                            {
+                                "confidence": 1,
+                                "technique": "instrumentation",
+                                "value": "C:\\Users\\sebas\\AppData\\Local\\Temp\\cdxgen-venv-pSgwhq"
+                            }
+                        ]
+                    }
+                },
+                "group": "",
+                "name": "requests",
+                "properties": [
+                    {
+                        "name": "ImportedModules",
+                        "value": "requests"
+                    }
+                ],
+                "purl": "pkg:pypi/requests@2.28.1",
+                "type": "library",
+                "version": "2.28.1"
+            },
+            {
+                "bom-ref": "pkg:pypi/charset-normalizer@2.1.1",
+                "evidence": {
+                    "identity": {
+                        "confidence": 0.8,
+                        "field": "purl",
+                        "methods": [
+                            {
+                                "confidence": 0.8,
+                                "technique": "manifest-analysis",
+                                "value": "C:\\Users\\sebas\\Programming\\healthinspectorsvelte\\src\\routes\\api\\dependencies\\sourcecode\\nptel-downloader\\requirements.txt"
+                            }
+                        ]
+                    }
+                },
+                "group": "",
+                "name": "charset-normalizer",
+                "properties": [
+                    {
+                        "name": "SrcFile",
+                        "value": "C:\\Users\\sebas\\Programming\\healthinspectorsvelte\\src\\routes\\api\\dependencies\\sourcecode\\nptel-downloader\\requirements.txt"
+                    }
+                ],
+                "purl": "pkg:pypi/charset-normalizer@2.1.1",
+                "type": "library",
+                "version": "2.1.1"
+            },
+            {
+                "bom-ref": "pkg:pypi/idna@3.3",
+                "evidence": {
+                    "identity": {
+                        "confidence": 0.8,
+                        "field": "purl",
+                        "methods": [
+                            {
+                                "confidence": 0.8,
+                                "technique": "manifest-analysis",
+                                "value": "C:\\Users\\sebas\\Programming\\healthinspectorsvelte\\src\\routes\\api\\dependencies\\sourcecode\\nptel-downloader\\requirements.txt"
+                            }
+                        ]
+                    }
+                },
+                "group": "",
+                "name": "idna",
+                "properties": [
+                    {
+                        "name": "SrcFile",
+                        "value": "C:\\Users\\sebas\\Programming\\healthinspectorsvelte\\src\\routes\\api\\dependencies\\sourcecode\\nptel-downloader\\requirements.txt"
+                    }
+                ],
+                "purl": "pkg:pypi/idna@3.3",
+                "type": "library",
+                "version": "3.3"
+            },
+            {
+                "bom-ref": "pkg:pypi/urllib3@1.26.12",
+                "evidence": {
+                    "identity": {
+                        "confidence": 0.8,
+                        "field": "purl",
+                        "methods": [
+                            {
+                                "confidence": 0.8,
+                                "technique": "manifest-analysis",
+                                "value": "C:\\Users\\sebas\\Programming\\healthinspectorsvelte\\src\\routes\\api\\dependencies\\sourcecode\\nptel-downloader\\requirements.txt"
+                            }
+                        ]
+                    }
+                },
+                "group": "",
+                "name": "urllib3",
+                "properties": [
+                    {
+                        "name": "SrcFile",
+                        "value": "C:\\Users\\sebas\\Programming\\healthinspectorsvelte\\src\\routes\\api\\dependencies\\sourcecode\\nptel-downloader\\requirements.txt"
+                    }
+                ],
+                "purl": "pkg:pypi/urllib3@1.26.12",
+                "type": "library",
+                "version": "1.26.12"
+            },
+            {
+                "bom-ref": "pkg:pypi/certifi@2022.6.15",
+                "evidence": {
+                    "identity": {
+                        "confidence": 0.8,
+                        "field": "purl",
+                        "methods": [
+                            {
+                                "confidence": 0.8,
+                                "technique": "manifest-analysis",
+                                "value": "C:\\Users\\sebas\\Programming\\healthinspectorsvelte\\src\\routes\\api\\dependencies\\sourcecode\\nptel-downloader\\requirements.txt"
+                            }
+                        ]
+                    }
+                },
+                "group": "",
+                "name": "certifi",
+                "properties": [
+                    {
+                        "name": "SrcFile",
+                        "value": "C:\\Users\\sebas\\Programming\\healthinspectorsvelte\\src\\routes\\api\\dependencies\\sourcecode\\nptel-downloader\\requirements.txt"
+                    }
+                ],
+                "purl": "pkg:pypi/certifi@2022.6.15",
+                "type": "library",
+                "version": "2022.6.15"
+            },
+            {
+                "bom-ref": "pkg:pypi/tqdm@4.64.1",
+                "evidence": {
+                    "identity": {
+                        "confidence": 1,
+                        "field": "purl",
+                        "methods": [
+                            {
+                                "confidence": 1,
+                                "technique": "instrumentation",
+                                "value": "C:\\Users\\sebas\\AppData\\Local\\Temp\\cdxgen-venv-pSgwhq"
+                            }
+                        ]
+                    }
+                },
+                "group": "",
+                "name": "tqdm",
+                "properties": [
+                    {
+                        "name": "ImportedModules",
+                        "value": "tqdm.tqdm"
+                    }
+                ],
+                "purl": "pkg:pypi/tqdm@4.64.1",
+                "type": "library",
+                "version": "4.64.1"
+            },
+            {
+                "bom-ref": "pkg:pypi/colorama@0.4.6",
+                "evidence": {
+                    "identity": {
+                        "confidence": 0.8,
+                        "field": "purl",
+                        "methods": [
+                            {
+                                "confidence": 0.8,
+                                "technique": "manifest-analysis",
+                                "value": "C:\\Users\\sebas\\Programming\\healthinspectorsvelte\\src\\routes\\api\\dependencies\\sourcecode\\nptel-downloader\\requirements.txt"
+                            }
+                        ]
+                    }
+                },
+                "group": "",
+                "name": "colorama",
+                "properties": [
+                    {
+                        "name": "SrcFile",
+                        "value": "C:\\Users\\sebas\\Programming\\healthinspectorsvelte\\src\\routes\\api\\dependencies\\sourcecode\\nptel-downloader\\requirements.txt"
+                    }
+                ],
+                "purl": "pkg:pypi/colorama@0.4.6",
+                "type": "library",
+                "version": "0.4.6"
+            }
+        ],
+        "dependencies": [
+            {
+                "dependsOn": [],
+                "ref": "pkg:pypi/nptel-downloader@latest"
+            },
+            {
+                "dependsOn": [],
+                "ref": "pkg:pypi/soupsieve@2.3.2.post1"
+            },
+            {
+                "dependsOn": [
+                    "pkg:pypi/soupsieve@2.3.2.post1"
+                ],
+                "ref": "pkg:pypi/beautifulsoup4@4.11.1"
+            },
+            {
+                "dependsOn": [],
+                "ref": "pkg:pypi/chardet@5.0.0"
+            },
+            {
+                "dependsOn": [],
+                "ref": "pkg:pypi/charset-normalizer@2.1.1"
+            },
+            {
+                "dependsOn": [],
+                "ref": "pkg:pypi/idna@3.3"
+            },
+            {
+                "dependsOn": [],
+                "ref": "pkg:pypi/urllib3@1.26.12"
+            },
+            {
+                "dependsOn": [],
+                "ref": "pkg:pypi/certifi@2022.6.15"
+            },
+            {
+                "dependsOn": [
+                    "pkg:pypi/certifi@2022.6.15",
+                    "pkg:pypi/charset-normalizer@2.1.1",
+                    "pkg:pypi/idna@3.3",
+                    "pkg:pypi/urllib3@1.26.12"
+                ],
+                "ref": "pkg:pypi/requests@2.28.1"
+            },
+            {
+                "dependsOn": [],
+                "ref": "pkg:pypi/colorama@0.4.6"
+            },
+            {
+                "dependsOn": [
+                    "pkg:pypi/colorama@0.4.6"
+                ],
+                "ref": "pkg:pypi/tqdm@4.64.1"
+            }
+        ],
+        "metadata": {
+            "authors": [
+                {
+                    "name": "OWASP Foundation"
+                }
+            ],
+            "component": {
+                "bom-ref": "pkg:pypi/nptel-downloader@latest",
+                "group": "",
+                "name": "nptel-downloader",
+                "purl": "pkg:pypi/nptel-downloader@latest",
+                "type": "application",
+                "version": "latest"
+            },
+            "lifecycles": [
+                {
+                    "phase": "build"
+                }
+            ],
+            "timestamp": "2024-05-04T23:32:29Z",
+            "tools": {
+                "components": [
+                    {
+                        "author": "OWASP Foundation",
+                        "bom-ref": "pkg:npm/@cyclonedx/cdxgen@10.4.1",
+                        "group": "@cyclonedx",
+                        "name": "cdxgen",
+                        "publisher": "OWASP Foundation",
+                        "purl": "pkg:npm/%40cyclonedx/cdxgen@10.4.1",
+                        "type": "application",
+                        "version": "10.4.1"
+                    }
+                ]
+            }
+        },
+        "serialNumber": "urn:uuid:5e4abfc1-1f02-4457-b94f-24aec01e294d",
+        "specVersion": "1.5",
+        "version": 1
+    }
+}

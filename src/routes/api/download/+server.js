@@ -48,11 +48,11 @@ export async function GET({ url }) {
 		console.log('All files in sourcecode directory deleted successfully.');
 	} catch (err) {
 		console.error('Error deleting files:', err);
+		return new Response('Internal Server Error', { status: 500 });
 	}
 	const repoUrl = url.searchParams.get('repoUrl');
 	if (!repoUrl) {
 		console.error('Missing repoUrl parameter');
-		// Use Response for error cases
 		return new Response('Missing repoUrl parameter', { status: 400 });
 	}
 
@@ -62,18 +62,14 @@ export async function GET({ url }) {
 		await execAsync(`git clone ${repoUrl} ${repoPath}`);
 		console.log(`Cloned repository from ${repoUrl} to ${repoPath}`);
 
-		const requirementsFilePath = path.join(repoPath, 'requirements.txt');
-		const requirementsFile = await fs.promises.readFile(requirementsFilePath, 'utf8');
-		console.log(`Read requirements file from ${requirementsFilePath}`);
-
-		// Return a Response object with JSON body
-		return new Response(JSON.stringify({ requirementsFile }), {
-			status: 200, // Explicitly set the status code
-			headers: { 'Content-Type': 'application/json' } // Set headers appropriately
+		// You can customize this part to suit what you need from the repo
+		// For now, just return a success message
+		return new Response(JSON.stringify({ message: "Repository processed successfully" }), {
+			status: 200,
+			headers: { 'Content-Type': 'application/json' }
 		});
 	} catch (err) {
 		console.error('Error from source code downloader:', err);
-		// Use Response for error cases with detailed error information
 		return new Response('Error processing request', { status: 500 });
 	}
 }

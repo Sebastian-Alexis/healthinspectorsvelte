@@ -33,35 +33,46 @@
 	}
 
 	async function handleUrlSubmit() {
-		console.log('URL submit event: ', repoUrl);
-		if (repoUrl) {
-			try {
-				const response = await fetch(`/api/download?repoUrl=${repoUrl}`);
-				if (!response.ok) {
-					throw new Error(`HTTP error! status: ${response.status}`);
-				}
-				const data = await response.json(); // Parse the JSON response
-				console.log('Repository downloaded successfully!');
+    console.log('URL submit event: ', repoUrl);
+    isLoading = true;
+    if (repoUrl) {
+        try {
+            const response = await fetch(`/api/download?repoUrl=${repoUrl}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json(); // Parse the JSON response
+            console.log('Repository downloaded successfully!');
+
+            const sbomResponse = await fetch('/api/sbom');
+            if (!sbomResponse.ok) {
+                throw new Error(`HTTP error! status: ${sbomResponse.status}`);
+            }
+
+            const sbomData = await sbomResponse.json(); // Parse the JSON response
+            console.log('SBOM generated successfully:', sbomData.sbom);
+            console.log('Cleaned Dependency Tree:', sbomData.cleanedDependencyTree);
+			dependencyTree = sbomData.cleanedDependencyTree;
 
 				// Assuming the server responds with an object containing the requirementsFile property
-				const requirementsContent = data.requirementsFile;
-				console.log('Requirements.txt content:', requirementsContent);
+				// const requirementsContent = data.requirementsFile;
+				// console.log('Requirements.txt content:', requirementsContent);
 
-				console.log('File contents:', requirementsContent);
-				const lines = requirementsContent.split('\n');
-				const libraries = lines
-					.map((line) => {
-						const parts = line.split('==');
-						if (parts.length === 2 && parts[0] && parts[1]) {
-							return { name: parts[0], version: parts[1] };
-						}
-						return null;
-					})
-					.filter((lib) => lib !== null);
-				fetchAllDependencies(libraries, requirementsContent);
+				// console.log('File contents:', requirementsContent);
+				// const lines = requirementsContent.split('\n');
+				// const libraries = lines
+				// 	.map((line) => {
+				// 		const parts = line.split('==');
+				// 		if (parts.length === 2 && parts[0] && parts[1]) {
+				// 			return { name: parts[0], version: parts[1] };
+				// 		}
+				// 		return null;
+				// 	})
+				// 	.filter((lib) => lib !== null);
+				// fetchAllDependencies(libraries, requirementsContent);
 
-				// Here you can do further processing with requirementsContent
-				// For example, displaying it on the page, further parsing, etc.
+				// // Here you can do further processing with requirementsContent
+				// // For example, displaying it on the page, further parsing, etc.
 			} catch (error) {
 				console.error('Error downloading repo:', error);
 			}
