@@ -107,6 +107,8 @@ async function fetchDependenciesRecursively(library, version, depth = 0) {
 				? [...new Set(vulnerabilityResponse.vulns)] // Use a Set to remove duplicates
 				: [];
 
+
+				
 			// Calculate baseScore for each dependency
 			dep.baseScore =
 				dep.vulnerabilities.length > 0
@@ -136,6 +138,7 @@ function formatDependencyTree(dependencies, level = 0) {
 	return dependencies
 		.map((dep) => {
 			if (!dep.name || !dep.latest_stable) {
+				dep.latest_stable = ''; // Mark latest stable value as empty
 				return ''; // Skip this dependency
 			}
 			console.log('VULNERABILITIES: ', dep.vulnerabilities);
@@ -221,7 +224,7 @@ export async function GET({ url }) {
 		libraries = lines
 			.filter((line) => line.trim() && !line.trim().startsWith('#'))
 			.map((line) => {
-				const [name, version] = line.split('==');
+				const [name, version] = line.split(/(==|>=|<=|>|<)/); // Use regex to split on multiple operators
 				return { name, version };
 			});
 	}
@@ -263,25 +266,6 @@ export async function GET({ url }) {
 		const cveResults = [];
 		const cveSet = new Set(allCveIds); // Use a Set to remove duplicates
 
-		for (const cve of cveSet) {
-			const apiUrl = `https://services.nvd.nist.gov/rest/json/cves/2.0?cveID=${cve}`;
-
-			// Check if the CVE ID already exists in cveResults
-			const existingCve = cveResults.find((result) => result.cveID === cve);
-			if (existingCve) {
-				console.log(`CVE ${cve} is already stored.`);
-				continue; // Skip making the API call
-			}
-
-			const response = await nodeFetch(apiUrl);
-			if (response.ok) {
-				const result = await response.json();
-				cveResults.push(result);
-			} else {
-				console.error(`Failed to fetch NVD API data for CVE ${cve}`);
-			}
-		}
-
 		// Store the API results in src/routes/api/dependencies/results.json
 		const __filename = fileURLToPath(import.meta.url);
 		const resultsFolderPath = path.join(path.dirname(__filename), 'results');
@@ -292,29 +276,54 @@ export async function GET({ url }) {
 		}
 
 		for (const cve of cveSet) {
+			if (!cve.trim()) {
+				console.log("Skipping empty CVE ID.");
+				continue; // Skip this iteration if the CVE ID is empty or just spaces
+			}
+		
 			const apiUrl = `https://services.nvd.nist.gov/rest/json/cves/2.0?cveID=${cve}`;
 			console.log('Making request to NVD API:', apiUrl);
-
-			// Check if the CVE ID already exists in cveResults
-			const existingCve = cveResults.find((result) => result.cveID === cve);
-			if (existingCve) {
-				console.log(`CVE ${cve} is already stored.`);
-				continue; // Skip making the API call
+		
+			let response;
+			let retryCount = 0;
+			const maxRetries = 50; // Set your desired maximum retry limit
+			const retryDelayBase = 6000; // Base delay in milliseconds
+		
+			while (retryCount < maxRetries) {
+				try {
+					response = await nodeFetch(apiUrl);
+					if (response.ok) {
+						const result = await response.json();
+						cveResults.push(result);
+		
+						// Store the API result in a separate file
+						const cveFilePath = path.join(resultsFolderPath, `${cve}.json`);
+						fs.writeFileSync(cveFilePath, JSON.stringify(result));
+						console.log(`Stored CVE ${cve} result in ${cveFilePath}`);
+						break; // Exit the loop if successful
+					} else {
+						console.error(`Attempt ${retryCount + 1}: Failed to fetch NVD API data for CVE ${cve}, status: ${response.status}`);
+					}
+				} catch (error) {
+					console.error(`Attempt ${retryCount + 1}: Error fetching data for CVE ${cve}: ${error.message}`);
+				}
+		
+				retryCount++;
+				if (retryCount < maxRetries) {
+					// Wait before the next retry attempt
+					const delay = retryCount * retryDelayBase; // Delay increases with each retry
+					console.log(`Waiting ${delay} ms before next retry.`);
+					await new Promise(resolve => setTimeout(resolve, delay));
+				}
 			}
-
-			const response = await nodeFetch(apiUrl);
-			if (response.ok) {
-				const result = await response.json();
-				cveResults.push(result);
-
-				// Store the API result in a separate file
-				const cveFilePath = path.join(resultsFolderPath, `${cve}.json`);
-				fs.writeFileSync(cveFilePath, JSON.stringify(result));
-				console.log(`Stored CVE ${cve} result in ${cveFilePath}`);
-			} else {
-				console.error(`Failed to fetch NVD API data for CVE ${cve}`);
+		
+			if (!response.ok && retryCount === maxRetries) {
+				console.error(`Failed to fetch NVD API data for CVE ${cve} after ${maxRetries} retries.`);
 			}
 		}
+		
+		
+		
 
 		const cveFiles = fs.readdirSync('src/routes/api/dependencies/results');
 		const baseScores = [];
@@ -348,7 +357,6 @@ export async function GET({ url }) {
 		const averageBaseScore = Math.round((totalBaseScore / baseScores.length) * 10) / 10;
 		const numberOfBaseScores = fs.readdirSync('src/routes/api/dependencies/results').length;
 
-		console.log('Number of Base Scores:', numberOfBaseScores);
 
 		console.log('Average Base Score:', averageBaseScore);
 		console.log('All Base Scores:', baseScores);
@@ -375,6 +383,8 @@ export async function GET({ url }) {
 		const sourceCodePath = path.join('src/routes/api/dependencies/sourcecode', directories[0]);
 		console.log('Source Code Directory:', sourceCodePath);
 		// Change the current working directory to sourceCodePath
+
+		console.log('FINAL TREE: ', finalOutputString);
 
 		return new Response(
 			JSON.stringify({

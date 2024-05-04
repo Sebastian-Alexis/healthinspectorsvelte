@@ -1,0 +1,37 @@
+{
+    "library": {
+      "name": "pandas",
+      "version": "2.2.2",
+      "version_date": "2024-04-11",
+      "last_stable_release_date": "2024-04-11",
+      "versions_behind": "0",
+      "development_activity": {
+        "commit_frequency": "37",
+        "issue_metrics": {
+          "open_issues": "3625",
+          "closed_issues": "1472",
+          "average_time_to_close": "7.6"
+        },
+        "pull_request_activity": "133"
+      },
+      "community_engagement": {
+        "active_contributors": "1272",
+        "community_interactions": "High"
+      },
+      "release_frequency": "5",
+      "dependency_health": {
+        "outdated_dependencies": "2",
+        "vulnerable_dependencies": "0"
+      },
+      "license": "BSD-3-Clause"
+    }
+  }
+
+
+
+
+
+
+
+
+    

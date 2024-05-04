@@ -140,6 +140,7 @@
 				const libraryCount = (formattedDependencyTree.match(/\(CVE/g) || []).length;
 				return libraryCount;
 			};
+			console.log(dependencyTree);
 
 			const numberOfLibraries = countLibraries(dependencyTree);
 			const numberOfVulnerableLibraries = countVulnerableLibraries(dependencyTree);

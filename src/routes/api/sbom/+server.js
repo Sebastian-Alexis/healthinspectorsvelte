@@ -32,7 +32,7 @@ export async function GET() {
 		execSync('cdxgen -o', {
 			stdio: 'inherit'
 		});
-		process.chdir('/Users/alexi1/healthinspectorsvelte');
+		process.chdir('C:\\Users\\sebas\\Programming\\healthinspectorsvelte');
 		const currentCodePath = dirname(fileURLToPath(import.meta.url));
 		console.log('current Code Directory:', currentCodePath);
 

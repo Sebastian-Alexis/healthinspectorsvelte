@@ -1,0 +1,181 @@
+{
+    "contributions_count": 10,
+    "dependencies": [
+        {
+            "deprecated": false,
+            "filepath": null,
+            "kind": "runtime",
+            "latest": "1.16.0",
+            "latest_stable": "1.16.0",
+            "name": "six",
+            "normalized_licenses": [
+                "MIT"
+            ],
+            "optional": false,
+            "outdated": false,
+            "platform": "Pypi",
+            "project_name": "six",
+            "requirements": "<2.0,>=1.6.1"
+        },
+        {
+            "deprecated": false,
+            "filepath": null,
+            "kind": "runtime",
+            "latest": "0.43.0",
+            "latest_stable": "0.43.0",
+            "name": "wheel",
+            "normalized_licenses": [
+                "MIT"
+            ],
+            "optional": false,
+            "outdated": false,
+            "platform": "Pypi",
+            "project_name": "wheel",
+            "requirements": "<1.0,>=0.23.0"
+        }
+    ],
+    "dependencies_for_version": "1.6.3",
+    "dependent_repos_count": 91,
+    "dependents_count": 408,
+    "deprecation_reason": null,
+    "description": "An AST unparser for Python",
+    "forks": 49,
+    "homepage": "https://github.com/simonpercivall/astunparse",
+    "keywords": [
+        "astunparse",
+        "developer-tools",
+        "python"
+    ],
+    "language": "Python",
+    "latest_download_url": null,
+    "latest_release_number": "1.6.3",
+    "latest_release_published_at": "2019-12-22T18:12:11.000Z",
+    "latest_stable_release_number": "1.6.3",
+    "latest_stable_release_published_at": "2019-12-22T18:12:11.000Z",
+    "license_normalized": true,
+    "licenses": "BSD",
+    "name": "astunparse",
+    "normalized_licenses": [
+        "BSD-3-Clause"
+    ],
+    "package_manager_url": "https://pypi.org/project/astunparse/",
+    "platform": "Pypi",
+    "rank": 20,
+    "repository_license": "Other",
+    "repository_status": null,
+    "repository_url": "https://github.com/simonpercivall/astunparse",
+    "stars": 206,
+    "status": null,
+    "versions": [
+        {
+            "number": "1.1.0",
+            "original_license": "BSD",
+            "published_at": "2014-04-01T08:47:55.000Z",
+            "repository_sources": [
+                "Pypi"
+            ],
+            "researched_at": null,
+            "spdx_expression": "NOASSERTION"
+        },
+        {
+            "number": "1.2.0",
+            "original_license": "BSD",
+            "published_at": "2014-04-03T06:53:25.000Z",
+            "repository_sources": [
+                "Pypi"
+            ],
+            "researched_at": null,
+            "spdx_expression": "NOASSERTION"
+        },
+        {
+            "number": "1.2.1",
+            "original_license": "BSD",
+            "published_at": "2014-04-26T22:07:33.000Z",
+            "repository_sources": [
+                "Pypi"
+            ],
+            "researched_at": null,
+            "spdx_expression": "NOASSERTION"
+        },
+        {
+            "number": "1.2.2",
+            "original_license": "BSD",
+            "published_at": "2014-06-15T12:47:17.000Z",
+            "repository_sources": [
+                "Pypi"
+            ],
+            "researched_at": null,
+            "spdx_expression": "NOASSERTION"
+        },
+        {
+            "number": "1.3.0",
+            "original_license": null,
+            "published_at": "2016-01-17T13:12:45.000Z",
+            "repository_sources": [
+                "Pypi"
+            ],
+            "researched_at": null,
+            "spdx_expression": null
+        },
+        {
+            "number": "1.4.0",
+            "original_license": null,
+            "published_at": "2016-06-23T22:04:26.000Z",
+            "repository_sources": [
+                "Pypi"
+            ],
+            "researched_at": null,
+            "spdx_expression": null
+        },
+        {
+            "number": "1.5.0",
+            "original_license": null,
+            "published_at": "2017-02-05T02:38:41.000Z",
+            "repository_sources": [
+                "Pypi"
+            ],
+            "researched_at": null,
+            "spdx_expression": null
+        },
+        {
+            "number": "1.6.0",
+            "original_license": null,
+            "published_at": "2018-09-30T21:47:17.000Z",
+            "repository_sources": [
+                "Pypi"
+            ],
+            "researched_at": null,
+            "spdx_expression": null
+        },
+        {
+            "number": "1.6.1",
+            "original_license": null,
+            "published_at": "2018-10-03T09:02:43.000Z",
+            "repository_sources": [
+                "Pypi"
+            ],
+            "researched_at": null,
+            "spdx_expression": null
+        },
+        {
+            "number": "1.6.2",
+            "original_license": null,
+            "published_at": "2019-01-19T18:00:55.000Z",
+            "repository_sources": [
+                "Pypi"
+            ],
+            "researched_at": null,
+            "spdx_expression": null
+        },
+        {
+            "number": "1.6.3",
+            "original_license": null,
+            "published_at": "2019-12-22T18:12:11.000Z",
+            "repository_sources": [
+                "Pypi"
+            ],
+            "researched_at": null,
+            "spdx_expression": null
+        }
+    ]
+}
