@@ -85,48 +85,54 @@ async function checkVulnerabilities(library, version) {
 }
 
 async function fetchDependenciesRecursively(library, version, depth = 0) {
-    try {
-        const vulnerabilityResponse = await checkVulnerabilities(library, version);
-        console.log(`Vulnerability response for ${library}:`, vulnerabilityResponse);
+	try {
+		const vulnerabilityResponse = await checkVulnerabilities(library, version);
+		console.log(`Vulnerability response for ${library}:`, vulnerabilityResponse);
 
-        const vulns = Array.isArray(vulnerabilityResponse.vulns) ? vulnerabilityResponse.vulns : [];
-        const cveIds = [
-            ...new Set(
-                vulns.flatMap((vuln) =>
-                    vuln.aliases ? vuln.aliases.filter((alias) => alias.startsWith('CVE-')) : []
-                )
-            )
-        ].join(', ');
+		const vulns = Array.isArray(vulnerabilityResponse.vulns) ? vulnerabilityResponse.vulns : [];
+		const cveIds = [
+			...new Set(
+				vulns.flatMap((vuln) =>
+					vuln.aliases ? vuln.aliases.filter((alias) => alias.startsWith('CVE-')) : []
+				)
+			)
+		].join(', ');
 
-        const dependencies = await fetchRuntimeDependencies(library, version);
-        console.log(`Fetched dependencies for ${library}:`, dependencies);
+		const dependencies = await fetchRuntimeDependencies(library, version);
+		console.log(`Fetched dependencies for ${library}:`, dependencies);
 
-        // Here, instead of fetching dependencies recursively, perform the desired operation
-        if (depth === 0) {  // Check if it's the first call (top-level dependency)
-            // Run your desired operation here
-            const sourceCodeDirectory = 'src/routes/api/dependencies/sourcecode';
-            const directories = fs.readdirSync(sourceCodeDirectory, { withFileTypes: true })
-                .filter(dirent => dirent.isDirectory())
-                .map(dirent => dirent.name);
+		for (const dep of dependencies) {
+			const vulnerabilityResponse = await checkVulnerabilities(dep.name, dep.latest_stable);
+			dep.vulnerabilities = Array.isArray(vulnerabilityResponse.vulns)
+				? [...new Set(vulnerabilityResponse.vulns)] // Use a Set to remove duplicates
+				: [];
 
-            console.log('Directories:', directories);
-            if (directories.length > 0) {
-                console.log('Directory:', directories[0]);
-                const sourceCodePath = path.join(sourceCodeDirectory, directories[0]);
-                console.log('Source Code Directory:', sourceCodePath);
-                process.chdir(sourceCodePath);
-                execSync('cdxgen -o', { stdio: 'inherit' });
-                console.log('SBOM generated successfully');
-            }
-        }
 
-        return { dependencies, cveIds }; // Return dependencies and CVE IDs
-    } catch (error) {
-        console.error(`Error in fetching dependencies for ${library}: ${error.message}`);
-        return { dependencies: [], cveIds: '' };
-    }
+				
+			// Calculate baseScore for each dependency
+			dep.baseScore =
+				dep.vulnerabilities.length > 0
+					? dep.vulnerabilities.reduce((sum, vuln) => sum + (vuln.baseScore || 0), 0) /
+						dep.vulnerabilities.length
+					: 0;
+
+			if (typeof dep.latest_stable === 'string' && dep.latest_stable) {
+				dep.dependencies = await fetchDependenciesRecursively(
+					dep.name,
+					dep.latest_stable,
+					depth + 1
+				);
+			} else {
+				dep.dependencies = [];
+			}
+		}
+		console.log('CVEIDS', cveIds);
+		return { dependencies, cveIds }; // Return both dependencies and CVE IDs
+	} catch (error) {
+		console.error(`Error in recursive dependency fetching for ${library}: ${error.message}`);
+		return { dependencies: [], cveIds: '' }; // Return empty dependencies and CVE IDs on error
+	}
 }
-
 
 function formatDependencyTree(dependencies, level = 0) {
 	return dependencies
@@ -324,7 +330,7 @@ export async function GET({ url }) {
 
 		for (const cveFile of cveFiles) {
 			// If the file is named ".json", delete it and continue with the next file
-			if (cveFile === '.json') { 
+			if (cveFile === '.json') {
 				fs.unlinkSync(path.join('src/routes/api/dependencies/results', cveFile));
 				console.log(`Deleted file: ${cveFile}`);
 				continue;

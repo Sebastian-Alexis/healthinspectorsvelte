@@ -113,8 +113,8 @@ export async function GET() {
         });
 
         // Extract and clean the dependency tree from the output
-		const treeStart = output.indexOf('pkg');
-		const treeEnd = output.lastIndexOf('pkg') + 'pkg'.length;
+        const treeStart = output.indexOf('pkg');
+        const treeEnd = output.lastIndexOf('pkg') + 'pkg'.length + output.substring(output.lastIndexOf('pkg') + 'pkg'.length).indexOf('\n');
         let tree = output.substring(treeStart, treeEnd)
                            .replace(/Dependency Tree/g, '')
                            .replace(/[║╔╚╗╝═╟╢]/g, '')
