@@ -324,7 +324,7 @@ export async function GET({ url }) {
 
 		for (const cveFile of cveFiles) {
 			// If the file is named ".json", delete it and continue with the next file
-			if (cveFile === '.json') {
+			if (cveFile === '.json') { 
 				fs.unlinkSync(path.join('src/routes/api/dependencies/results', cveFile));
 				console.log(`Deleted file: ${cveFile}`);
 				continue;
