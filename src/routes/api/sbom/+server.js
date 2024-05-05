@@ -196,7 +196,23 @@ export async function GET() {
 
 		console.log('Library CVEs:', libraryCVEs);
 
+		// Split the tree into lines
+		let treeLines = tree.split('\n');
 
+		// For each line in the tree
+		for (let i = 0; i < treeLines.length; i++) {
+			// For each library in libraryCVEs
+			for (const library in libraryCVEs) {
+				// If the line contains the library name
+				if (treeLines[i].includes(library)) {
+					// Append the CVEs to the end of the line
+					treeLines[i] += ' ' + libraryCVEs[library].join(', ');
+				}
+			}
+		}
+
+		// Join the lines back into a single string
+		tree = treeLines.join('\n');
         // Package response content
         const responseContent = {
             sbom: sbomJson,
