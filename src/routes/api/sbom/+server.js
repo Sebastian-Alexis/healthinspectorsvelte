@@ -26,12 +26,20 @@ async function checkVulnerabilities(library, version) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        return await response.json();  // Contains vulnerability information
+        const vulnerabilityData = await response.json();  // Contains vulnerability information
+        console.log('Vulnerability Data:', library);
+        
+        if (vulnerabilityData && vulnerabilityData.vulns && vulnerabilityData.vulns.length === 0) {
+            console.log(`No vulnerabilities found for ${library}`);
+        }
+        
+        return vulnerabilityData;  // Ensure it always returns the data, handling empty or error states within the function
     } catch (error) {
         console.error(`Error checking vulnerabilities for ${library}: ${error}`);
-        return { vulns: [] };  // Return empty vulnerabilities on error
+        return { vulns: [] };  // Safeguard: Return empty vulnerabilities array on error
     }
 }
+
 
 // Helper function to get CVE details from NVD
 async function getCveDetails(library, cve, resultsFolderPath) {
@@ -42,23 +50,31 @@ async function getCveDetails(library, cve, resultsFolderPath) {
         return JSON.parse(fs.readFileSync(cveFilePath, 'utf8'));
     }
 
-    try {
-        const apiUrl = `https://services.nvd.nist.gov/rest/json/cves/2.0?cveID=${cve}`;
-        const response = await fetch(apiUrl);
+    let attempt = 1;
+    while (attempt <= 50) {
+        try {
+            console.log(`Fetching data for CVE ${library}_${cve} (Attempt ${attempt})...`);
+            const apiUrl = `https://services.nvd.nist.gov/rest/json/cves/2.0?cveID=${cve}`;
+            const response = await fetch(apiUrl);
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            // Cache the new CVE data
+            fs.writeFileSync(cveFilePath, JSON.stringify(data));
+            console.log(`Cached new CVE data for ${library}_${cve} at ${cveFilePath}`);
+            return data;
+        } catch (error) {
+            console.error(`Error fetching data for CVE ${library}_${cve}: ${error}`);
+            attempt++;
+            await new Promise(resolve => setTimeout(resolve, 6000)); // Pause for 6000 ms
         }
-
-        const data = await response.json();
-        // Cache the new CVE data
-        fs.writeFileSync(cveFilePath, JSON.stringify(data));
-        console.log(`Cached new CVE data for ${library}_${cve} at ${cveFilePath}`);
-        return data;
-    } catch (error) {
-        console.error(`Error fetching data for CVE ${library}_${cve}: ${error}`);
-        return null;  // Return null on error
     }
+
+    console.error(`Exceeded maximum number of attempts for CVE ${library}_${cve}`);
+    return null;  // Return null if max attempts exceeded
 }
 
 
@@ -140,16 +156,17 @@ export async function GET() {
             const vulns = vulnData.vulns || [];
             const cveDetails = await Promise.all(
                 vulns.map(v => v.aliases ? v.aliases.filter(alias => alias.startsWith('CVE-')) : [])
-                     .flat()
-                     .map(cve => getCveDetails(library, cve, resultsFolderPath))
+                .flat()
+                .map(cve => getCveDetails(library, cve, resultsFolderPath))
             );
+
 
             // Extract and attach CVE IDs and base scores
             libraryVersions[library] = {
                 version,
                 vulnerabilities: cveDetails.map(cve => {
-                    const baseScore = cve?.result?.CVE_Items[0]?.impact?.baseMetricV3?.cvssV3?.baseScore || 'N/A';
-                    return { cve: cve?.result?.CVE_data_meta?.ID, baseScore };
+                    const baseScore = cve && cve.result && cve.result.CVE_Items[0] && cve.result.CVE_Items[0].impact && cve.result.CVE_Items[0].impact.baseMetricV3 && cve.result.CVE_Items[0].impact.baseMetricV3.cvssV3 ? cve.result.CVE_Items[0].impact.baseMetricV3.cvssV3.baseScore : 'N/A';
+                    return { cve: cve && cve.result && cve.result.CVE_data_meta ? cve.result.CVE_data_meta.ID : 'Unknown CVE', baseScore };
                 })
             };
         }
@@ -194,7 +211,7 @@ export async function GET() {
                 if (baseScoreIndex !== -1) {
                     const baseScoreStartIndex = baseScoreIndex + '"baseScore":'.length;
                     const baseScoreEndIndex = cveFileContent.indexOf(',', baseScoreStartIndex);
-                    const baseScore = cveFileContent.substring(baseScoreStartIndex, baseScoreEndIndex);
+                    const baseScore = cveFileContent.substring(baseScoreStartIndex, baseScoreEndIndex).trim();
                     baseScores.push(parseFloat(baseScore));
                 }
             });
@@ -238,11 +255,7 @@ export async function GET() {
 		// Join the lines back into a single string
 		tree = treeLines.join('\n');
         // Package response content
-        const responseContent = {
-            sbom: sbomJson,
-            cleanedDependencyTree: tree,  // Original tree for display
-            libraryVersions: libraryVersions
-        };
+
 
 
         // Count the number of vulnerabilities
@@ -276,24 +289,32 @@ export async function GET() {
         const averageProjectScore = (cveScores.reduce((sum, score) => sum + score, 0) / cveScores.length).toFixed(1);
         console.log('Average Project Score:', averageProjectScore);
 
+        // Add additional metrics to the response content
+
+        const responseContent = {
+            sbom: sbomJson,
+            cleanedDependencyTree: tree,  // Original tree for display
+            libraryVersions: libraryVersions,
+            numberOfBaseScores: numVulnerabilities,
+            baseScores: baseScores,
+            averageBaseScore: averageScore,
+            averageProjectScore: averageProjectScore
+        };
+
 
         // Save response content to cache
         if (!fs.existsSync(cacheDirectory)) {
             fs.mkdirSync(cacheDirectory);
         }
         fs.writeFileSync(cachePath, JSON.stringify(responseContent), 'utf8');
-        return new Response(JSON.stringify({
-            ...responseContent,
-            averageBaseScore: averageScore,
-            numberOfBaseScores: numVulnerabilities,
-            baseScores: baseScores,
-            averageProjectScore: averageProjectScore
-        }), {
+        return new Response(JSON.stringify(responseContent), {
             status: 200,
             headers: {
-            'Content-Type': 'application/json'
+                'Content-Type': 'application/json'
             }
         });
+
+        
     } catch (error) {
         console.error('Error:', error);
         return new Response(`Internal Server Error: ${error.message}`, { status: 500 });
