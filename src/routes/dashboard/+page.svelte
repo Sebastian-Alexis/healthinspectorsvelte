@@ -21,14 +21,17 @@
 			if (!response.ok) {
 				throw new Error(`HTTP error! status: ${response.status}`);
 			}
-			const sbomJson = await response.json();
-			const sbomString = JSON.stringify(sbomJson);
+			const fullSbomJson = await response.json();
+			const sbom = fullSbomJson.sbom; // Extracting just the sbom part of the JSON
+			const sbomString = JSON.stringify(sbom);
 			console.log(sbomString);
 			const sbomBlob = new Blob([sbomString], { type: 'application/json' });
 			download(sbomBlob, 'sbom.json');
 			isButtonDisabled = false;
 		} catch (error) {
 			console.error('Error:', error);
+		} finally {
+			isButtonDisabled = false;
 		}
 	}
 
@@ -77,6 +80,7 @@
 			});
 
 			console.log(dependencyTree);
+			isLoading = false;
 				// const lines = requirementsContent.split('\n');
 				// const libraries = lines
 				// 	.map((line) => {
