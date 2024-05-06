@@ -130,7 +130,7 @@ export async function GET() {
         });
 
         // Extract and clean the dependency tree from the output
-        const treeStart = output.indexOf('pkg');
+        const treeStart = output.indexOf('pkg:');
         const treeEnd = output.lastIndexOf('pkg') + 'pkg'.length + output.substring(output.lastIndexOf('pkg') + 'pkg'.length).indexOf('\n');
         let tree = output.substring(treeStart, treeEnd)
                            .replace(/Dependency Tree/g, '')
@@ -223,22 +223,24 @@ export async function GET() {
 
         // Create a list of all the base scores in each CVE found for a specific project
 
-		// Separate library name and CVE
         const libraryCVEs = {};
         const libraryNames = Object.keys(libraryVersions);
+        const baseCvePath = 'C:\\Users\\sebas\\Programming\\healthinspectorsvelte\\src\\routes\\api\\sbom\\dependencies\\results';
+        
         libraryNames.forEach(library => {
-            const cvePaths = cveFiles.find(cveFile => cveFile.includes(library));
-            if (cvePaths) {
+            const cveFiles = fs.readdirSync(baseCvePath); // Read all files in the CVE directory
+            const cvePaths = cveFiles.filter(cveFile => cveFile.startsWith(library) && cveFile.endsWith('.json'));
             const cves = cvePaths.map(cvePath => {
                 const cveFileName = path.basename(cvePath, '.json');
                 const cve = cveFileName.substring(cveFileName.lastIndexOf('_') + 1);
                 return cve;
             });
-            libraryCVEs[library] = cves;
+            if (cves.length > 0) {
+                libraryCVEs[library] = cves;
             }
         });
-
-        console.log('Library CVEs:', libraryCVEs);
+        
+        console.log(libraryCVEs);
 
 		// Split the tree into lines
 		let treeLines = tree.split('\n');
@@ -293,9 +295,14 @@ export async function GET() {
 
         // Calculate the average score of the entire project
         let averageProjectScore = 0;
+        console.log("num vulnerabilities for average project socre", numVulnerabilities)
+        console.log("num libraries that are secure", numVulnerabilityFreeLibraries)
         if (numVulnerabilities > 0) {
             const secureProjects = numLibraries - numVulnerabilityFreeLibraries;
+            console.log('Secure Projects:', secureProjects);
             const cveScores = baseScores.concat(Array(secureProjects).fill(0));
+            console.log('CVE Scores:', cveScores);
+            
             averageProjectScore = (cveScores.reduce((sum, score) => sum + score, 0) / cveScores.length).toFixed(1);
         }
         console.log('Average Project Score:', averageProjectScore);
@@ -304,7 +311,7 @@ export async function GET() {
 
         // Add additional metrics to the response content
         averageProjectScore = isNaN(averageProjectScore) ? 0 : averageProjectScore;
-
+        console.log("tree", tree)
         const responseContent = {
             sbom: sbomJson,
             cleanedDependencyTree: tree,  // Original tree for display
