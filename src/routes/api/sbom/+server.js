@@ -15,7 +15,7 @@ async function checkVulnerabilities(library, version) {
                 ecosystem: 'PyPI'
             }
         };
-
+        console.log("checking osv api for", library, version)
         const response = await fetch('https://api.osv.dev/v1/query', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -42,18 +42,18 @@ async function checkVulnerabilities(library, version) {
 
 
 // Helper function to get CVE details from NVD
-async function getCveDetails(library, cve, resultsFolderPath) {
-    const cveFilePath = path.join(resultsFolderPath, `${library}_${cve}.json`);
+async function getCveDetails(library, cve, resultsFolderPath, version) {
+    const cveFilePath = path.join(resultsFolderPath, `${library}@${version}_${cve}.json`);
     // Check if CVE data is already cached
     if (fs.existsSync(cveFilePath)) {
-        console.log(`Loading cached CVE data for ${library}_${cve}`);
+        console.log(`Loading cached CVE data for ${library}@${version}_${cve}`);
         return JSON.parse(fs.readFileSync(cveFilePath, 'utf8'));
     }
-
+    console.log(`Fetching data for CVE ${library}@${version}_${cve}...`);
     let attempt = 1;
     while (attempt <= 50) {
         try {
-            console.log(`Fetching data for CVE ${library}_${cve} (Attempt ${attempt})...`);
+            console.log(`Fetching data for CVE ${library}@${version}_${cve} (Attempt ${attempt})...`);
             const apiUrl = `https://services.nvd.nist.gov/rest/json/cves/2.0?cveID=${cve}`;
             const response = await fetch(apiUrl);
 
@@ -64,16 +64,16 @@ async function getCveDetails(library, cve, resultsFolderPath) {
             const data = await response.json();
             // Cache the new CVE data
             fs.writeFileSync(cveFilePath, JSON.stringify(data));
-            console.log(`Cached new CVE data for ${library}_${cve} at ${cveFilePath}`);
+            console.log(`Cached new CVE data for ${library}@${version}_${cve} at ${cveFilePath}`);
             return data;
         } catch (error) {
-            console.error(`Error fetching data for CVE ${library}_${cve}: ${error}`);
+            console.error(`Error fetching data for CVE ${library}@${version}_${cve}: ${error}`);
             attempt++;
             await new Promise(resolve => setTimeout(resolve, 6000)); // Pause for 6000 ms
         }
     }
 
-    console.error(`Exceeded maximum number of attempts for CVE ${library}_${cve}`);
+    console.error(`Exceeded maximum number of attempts for CVE ${library}@${version}_${cve}`);
     return null;  // Return null if max attempts exceeded
 }
 
@@ -157,7 +157,7 @@ export async function GET() {
             const cveDetails = await Promise.all(
                 vulns.map(v => v.aliases ? v.aliases.filter(alias => alias.startsWith('CVE-')) : [])
                 .flat()
-                .map(cve => getCveDetails(library, cve, resultsFolderPath))
+                .map(cve => getCveDetails(library, cve, resultsFolderPath, version))
             );
 
 
@@ -182,27 +182,26 @@ export async function GET() {
         const sbomString = fs.readFileSync(sbomPath, 'utf8');
         const sbomJson = JSON.parse(sbomString);
 
-		const libraryNames = Object.keys(libraryVersions);
-		console.log('Library Names:', libraryNames);
+        const libraryNamesAndVersions = Object.entries(libraryVersions).map(([name, version]) => `${name}@${version.version}`);
+        console.log('Library Names and Versions:', libraryNamesAndVersions);
 
 		// Check if each library name has a CVE in the results folder
-		const cveFiles = libraryNames.map(library => {
-			const cveFilePaths = fs.readdirSync(resultsFolderPath).filter(file => file.startsWith(`${library}_CVE-`) && file.endsWith('.json'));
-			if (cveFilePaths.length > 0) {
-			console.log(`Found ${cveFilePaths.length} files for ${library}`);
-			return cveFilePaths.map(cveFile => path.join(resultsFolderPath, cveFile));
-			} else {
-			console.log(`No files found for ${library}`);
-			return [];
-			}
-		});
+        const cveFiles = libraryNamesAndVersions.map(library => {
+            const cveFilePaths = fs.readdirSync(resultsFolderPath).filter(file => file.startsWith(`${library}_CVE-`) && file.endsWith('.json'));
+            if (cveFilePaths.length > 0) {
+                console.log(`Found ${cveFilePaths.length} files for ${library}`);
+                return cveFilePaths.map(cveFile => path.join(resultsFolderPath, cveFile));
+            } else {
+                console.log(`No files found for ${library}`);
+                return [];
+            }
+        });
 
 		console.log('CVE Files:', cveFiles);
 
 
 
 
-        //search for text like this "baseScore":7.5 in the found cve files, exxtract base sxcore value and save it in a list. Find by seraching as a string, not as json.
         const baseScores = [];
         cveFiles.forEach(cveFilePaths => {
             cveFilePaths.forEach(cveFilePath => {
