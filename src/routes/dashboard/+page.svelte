@@ -4,12 +4,12 @@
 	let isLoading = false;
 	let errorMessage = '';
 	let dependencyTree = '';
-	let averageBaseScore = '';
-	let numberOfBaseScores = '';
+	let averageBaseScore = null;
+	let numberOfBaseScores = null;
 	let basescoreList = '';
 	let repoUrl = '';
 	let baseScores = '';
-	let roundedAverageScore = '';
+	let roundedAverageScore = null;
 	let isButtonDisabled = false;
 
 	import download from 'downloadjs';
@@ -65,6 +65,9 @@
 			averageBaseScore = sbomData.averageBaseScore;
 			roundedAverageScore = sbomData.averageProjectScore;
 			
+			console.log(numberOfBaseScores);
+			console.log(averageBaseScore);
+			console.log(roundedAverageScore);
 
 			const newResponse = new Response(JSON.stringify(responseContent), {
 				status: 200,
@@ -280,7 +283,7 @@
 			<div class="stats shadow">
 				<div class="stat place-items-center px-4">
 					<div class="stat-title">Vulnerabilites</div>
-					{#if numberOfBaseScores}
+					{#if numberOfBaseScores !== null && numberOfBaseScores !== undefined}
 						<div class="stat-value">{numberOfBaseScores}</div>
 					{:else}
 						<span class="loading loading-ring loading-md"></span>
@@ -290,7 +293,7 @@
 
 				<div class="stat place-items-center px-4">
 					<div class="stat-title">Vulnerability Score</div>
-					{#if averageBaseScore}
+					{#if averageBaseScore !== null && averageBaseScore !== undefined}
 						<div class="stat-value text-secondary">{averageBaseScore}</div>
 					{:else}
 						<span class="loading loading-ring loading-md"></span>
@@ -300,7 +303,7 @@
 
 				<div class="stat place-items-center px-4">
 					<div class="stat-title">Project Score</div>
-					{#if roundedAverageScore}
+					{#if roundedAverageScore !== null && roundedAverageScore !== undefined}
 						<div class="stat-value">{roundedAverageScore}</div>
 					{:else}
 						<span class="loading loading-ring loading-md"></span>

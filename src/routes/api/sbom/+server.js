@@ -69,13 +69,14 @@ async function getCveDetails(library, cve, resultsFolderPath, version) {
         } catch (error) {
             console.error(`Error fetching data for CVE ${library}@${version}_${cve}: ${error}`);
             attempt++;
-            await new Promise(resolve => setTimeout(resolve, 6000)); // Pause for 6000 ms
+            await new Promise(resolve => setTimeout(resolve, 6000 * attempt)); // Pause for 6000 ms multiplied by the attempt number
         }
     }
 
     console.error(`Exceeded maximum number of attempts for CVE ${library}@${version}_${cve}`);
     return null;  // Return null if max attempts exceeded
 }
+
 
 
 // SvelteKit uses this export pattern for handling requests
@@ -223,18 +224,21 @@ export async function GET() {
         // Create a list of all the base scores in each CVE found for a specific project
 
 		// Separate library name and CVE
-		const libraryCVEs = libraryNames.reduce((acc, library, index) => {
-			const cvePaths = cveFiles[index];
-			const cves = cvePaths.map(cvePath => {
-			const cveFileName = path.basename(cvePath, '.json');
-			const cve = cveFileName.substring(cveFileName.lastIndexOf('_') + 1);
-			return cve;
-			});
-			acc[library] = cves;
-			return acc;
-		}, {});
+        const libraryCVEs = {};
+        const libraryNames = Object.keys(libraryVersions);
+        libraryNames.forEach(library => {
+            const cvePaths = cveFiles.find(cveFile => cveFile.includes(library));
+            if (cvePaths) {
+            const cves = cvePaths.map(cvePath => {
+                const cveFileName = path.basename(cvePath, '.json');
+                const cve = cveFileName.substring(cveFileName.lastIndexOf('_') + 1);
+                return cve;
+            });
+            libraryCVEs[library] = cves;
+            }
+        });
 
-		console.log('Library CVEs:', libraryCVEs);
+        console.log('Library CVEs:', libraryCVEs);
 
 		// Split the tree into lines
 		let treeLines = tree.split('\n');
@@ -265,8 +269,13 @@ export async function GET() {
         console.log('Number of Vulnerabilities:', numVulnerabilities);
 
         // Calculate the average score
-        const averageScore = (baseScores.reduce((sum, score) => sum + score, 0) / baseScores.length).toFixed(1);
+        let averageScore = 0;
+        if (baseScores.length > 0) {
+            averageScore = (baseScores.reduce((sum, score) => sum + score, 0) / baseScores.length).toFixed(1);
+        }
         console.log('Average Score:', averageScore);
+
+
 
         const numLibraries = (tree.match(/pkg/g) || []).length;
         console.log('Number of Libraries:', numLibraries);
@@ -283,12 +292,18 @@ export async function GET() {
         console.log('Number of Vulnerability-Free Libraries:', numVulnerabilityFreeLibraries);
 
         // Calculate the average score of the entire project
-        const secureProjects = numLibraries - numVulnerabilityFreeLibraries;
-        const cveScores = baseScores.concat(Array(secureProjects).fill(0));
-        const averageProjectScore = (cveScores.reduce((sum, score) => sum + score, 0) / cveScores.length).toFixed(1);
+        let averageProjectScore = 0;
+        if (numVulnerabilities > 0) {
+            const secureProjects = numLibraries - numVulnerabilityFreeLibraries;
+            const cveScores = baseScores.concat(Array(secureProjects).fill(0));
+            averageProjectScore = (cveScores.reduce((sum, score) => sum + score, 0) / cveScores.length).toFixed(1);
+        }
         console.log('Average Project Score:', averageProjectScore);
 
         // Add additional metrics to the response content
+
+        // Add additional metrics to the response content
+        averageProjectScore = isNaN(averageProjectScore) ? 0 : averageProjectScore;
 
         const responseContent = {
             sbom: sbomJson,
