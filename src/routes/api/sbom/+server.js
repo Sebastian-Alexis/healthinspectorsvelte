@@ -182,6 +182,30 @@ export async function GET() {
 
 		console.log('CVE Files:', cveFiles);
 
+
+
+
+        //search for text like this "baseScore":7.5 in the found cve files, exxtract base sxcore value and save it in a list. Find by seraching as a string, not as json.
+        const baseScores = [];
+        cveFiles.forEach(cveFilePaths => {
+            cveFilePaths.forEach(cveFilePath => {
+                const cveFileContent = fs.readFileSync(cveFilePath, 'utf8');
+                const baseScoreIndex = cveFileContent.indexOf('"baseScore":');
+                if (baseScoreIndex !== -1) {
+                    const baseScoreStartIndex = baseScoreIndex + '"baseScore":'.length;
+                    const baseScoreEndIndex = cveFileContent.indexOf(',', baseScoreStartIndex);
+                    const baseScore = cveFileContent.substring(baseScoreStartIndex, baseScoreEndIndex);
+                    baseScores.push(parseFloat(baseScore));
+                }
+            });
+        });
+        console.log('Base Scores:', baseScores);
+
+
+
+
+        // Create a list of all the base scores in each CVE found for a specific project
+
 		// Separate library name and CVE
 		const libraryCVEs = libraryNames.reduce((acc, library, index) => {
 			const cvePaths = cveFiles[index];
@@ -220,16 +244,54 @@ export async function GET() {
             libraryVersions: libraryVersions
         };
 
+
+        // Count the number of vulnerabilities
+        const numVulnerabilities = cveFiles.reduce((acc, cveFilePaths) => {
+            return acc + cveFilePaths.length;
+        }, 0);
+
+        console.log('Number of Vulnerabilities:', numVulnerabilities);
+
+        // Calculate the average score
+        const averageScore = (baseScores.reduce((sum, score) => sum + score, 0) / baseScores.length).toFixed(1);
+        console.log('Average Score:', averageScore);
+
+        const numLibraries = (tree.match(/pkg/g) || []).length;
+        console.log('Number of Libraries:', numLibraries);
+
+        
+        // Count the number of vulnerability-free libraries
+        const numVulnerabilityFreeLibraries = treeLines.reduce((count, line) => {
+            if (line.includes('pkg') && !line.includes('CVE')) {
+                return count + 1;
+            }
+            return count;
+        }, 0);
+
+        console.log('Number of Vulnerability-Free Libraries:', numVulnerabilityFreeLibraries);
+
+        // Calculate the average score of the entire project
+        const secureProjects = numLibraries - numVulnerabilityFreeLibraries;
+        const cveScores = baseScores.concat(Array(secureProjects).fill(0));
+        const averageProjectScore = (cveScores.reduce((sum, score) => sum + score, 0) / cveScores.length).toFixed(1);
+        console.log('Average Project Score:', averageProjectScore);
+
+
         // Save response content to cache
         if (!fs.existsSync(cacheDirectory)) {
             fs.mkdirSync(cacheDirectory);
         }
         fs.writeFileSync(cachePath, JSON.stringify(responseContent), 'utf8');
-
-        return new Response(JSON.stringify(responseContent), {
+        return new Response(JSON.stringify({
+            ...responseContent,
+            averageBaseScore: averageScore,
+            numberOfBaseScores: numVulnerabilities,
+            baseScores: baseScores,
+            averageProjectScore: averageProjectScore
+        }), {
             status: 200,
             headers: {
-                'Content-Type': 'application/json'
+            'Content-Type': 'application/json'
             }
         });
     } catch (error) {

@@ -44,21 +44,36 @@
             const data = await response.json(); // Parse the JSON response
             console.log('Repository downloaded successfully!');
 
-            const sbomResponse = await fetch('/api/sbom');
-            if (!sbomResponse.ok) {
-                throw new Error(`HTTP error! status: ${sbomResponse.status}`);
-            }
+			const sbomResponse = await fetch('/api/sbom');
+			if (!sbomResponse.ok) {
+				throw new Error(`HTTP error! status: ${sbomResponse.status}`);
+			}
 
-            const sbomData = await sbomResponse.json(); // Parse the JSON response
-            console.log('SBOM generated successfully:', sbomData.sbom);
-            console.log('Cleaned Dependency Tree:', sbomData.cleanedDependencyTree);
+			const sbomData = await sbomResponse.json(); // Parse the JSON response
+			console.log('SBOM generated successfully:', sbomData.sbom);
+			console.log('Cleaned Dependency Tree:', sbomData.cleanedDependencyTree);
 			dependencyTree = sbomData.cleanedDependencyTree;
 
-				// Assuming the server responds with an object containing the requirementsFile property
-				// const requirementsContent = data.requirementsFile;
-				// console.log('Requirements.txt content:', requirementsContent);
+			const responseContent = {
+				averageBaseScore: sbomData.averageBaseScore,
+				numberOfBaseScores: sbomData.numberOfBaseScores,
+				baseScores: sbomData.baseScores,
+				averageProjectScore: sbomData.averageProjectScore
+			};
 
-				// console.log('File contents:', requirementsContent);
+			numberOfBaseScores = sbomData.numberOfBaseScores;
+			averageBaseScore = sbomData.averageBaseScore;
+			roundedAverageScore = sbomData.averageProjectScore;
+			
+
+			const newResponse = new Response(JSON.stringify(responseContent), {
+				status: 200,
+				headers: {
+					'Content-Type': 'application/json'
+				}
+			});
+
+			console.log(dependencyTree);
 				// const lines = requirementsContent.split('\n');
 				// const libraries = lines
 				// 	.map((line) => {
