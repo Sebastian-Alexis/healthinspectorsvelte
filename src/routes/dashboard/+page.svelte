@@ -11,6 +11,7 @@
 	let baseScores = '';
 	let roundedAverageScore = null;
 	let isButtonDisabled = false;
+	let resetDependencyTree = false;
 
 	import download from 'downloadjs';
 
@@ -38,6 +39,11 @@
 	async function handleUrlSubmit() {
     console.log('URL submit event: ', repoUrl);
     isLoading = true;
+	numberOfBaseScores = null;
+	averageBaseScore = null;
+	roundedAverageScore = null;
+	resetDependencyTree = true;
+	dependencyTree = '';
     if (repoUrl) {
         try {
             const response = await fetch(`/api/download?repoUrl=${repoUrl}`);
@@ -67,6 +73,7 @@
 			numberOfBaseScores = sbomData.numberOfBaseScores;
 			averageBaseScore = sbomData.averageBaseScore;
 			roundedAverageScore = sbomData.averageProjectScore;
+			resetDependencyTree = false;
 			
 			console.log(numberOfBaseScores);
 			console.log(averageBaseScore);
@@ -274,6 +281,9 @@
 
 		{#if dependencyTree}
 			<pre class="dependency-tree">{dependencyTree}</pre>
+		{:else if (resetDependencyTree)}
+			<!-- Add your empty state content here -->
+			<p class="text-gray-500">loading....</p>
 		{/if}
 	</div>
 </div>
