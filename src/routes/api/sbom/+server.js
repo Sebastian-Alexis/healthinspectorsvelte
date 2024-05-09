@@ -39,6 +39,32 @@ async function checkVulnerabilities(library, version) {
         return { vulns: [] };  // Safeguard: Return empty vulnerabilities array on error
     }
 }
+// Function to call the libraries.io API
+async function getlibinfo(library, version) {
+    const apiKeyList = ['7165ca9cc733d1abd00a87a930d9d714', '10b8f9c2a81b273a6c0db61fb96fb212', '53d6ec55fcbfdedb9ac6bd44ae42050c']; // List of API keys
+    let response;
+
+    // Iterate through the API key list
+    for (const apiKey of apiKeyList) {
+        const requestUrl = `https://libraries.io/api/pypi/${library}/${version}/dependencies?api_key=${apiKey}`;
+        try {
+            response = await fetch(requestUrl);
+            if (response.ok) {
+                break; // Stop iterating if the request is successful
+            }
+        } catch (error) {
+            console.error(`Error calling Libraries.io API: ${error}`);
+        }
+    }
+
+    if (!response || !response.ok) {
+        console.error(`Failed to call Libraries.io API for ${library}@${version}`);
+        return null;
+    }
+
+    const data = await response.json();
+    return data;
+}
 
 
 // Helper function to get CVE details from NVD
@@ -327,6 +353,39 @@ export async function GET() {
         if (!fs.existsSync(cacheDirectory)) {
             fs.mkdirSync(cacheDirectory);
         }
+
+        //community report section
+        const communityReport = Object.fromEntries(Object.entries(libraryVersions).map(([library, version]) => [library, { version: version.version, published_at: null, license: null }]));
+        console.log('Community Report:', communityReport);
+        responseContent.communityReport = communityReport;
+
+        
+        // Get list of libraries and versions
+        const librariesAndVersions = Object.entries(libraryVersions).map(([library, version]) => ({ library, version: version.version }));
+
+        // Call library info for each library
+        for (const { library, version } of librariesAndVersions) {
+            const libraryInfo = await getlibinfo(library, version);
+            // Process the library info
+            if (libraryInfo) {
+            const libraryInfoString = JSON.stringify(libraryInfo);
+            const searchString = `{"number":"${version}","published_at":`;
+            const startIndex = libraryInfoString.indexOf(searchString);
+            if (startIndex !== -1) {
+                // Process the library info
+                const endIndex = libraryInfoString.indexOf('}', startIndex) + 1;
+                const libraryInfoJSON = libraryInfoString.substring(startIndex, endIndex);
+                const libraryInfoObject = JSON.parse(libraryInfoJSON);
+                // Do something with the library info
+                console.log(`Library Info for ${library}@${version}:`, libraryInfoObject);
+                communityReport[library].published_at = libraryInfoObject.published_at;
+                communityReport[library].license = libraryInfoObject.original_license;
+            }
+            } else {
+            console.error(`Failed to get library info for ${library}@${version}`);
+            }
+        }
+
         fs.writeFileSync(cachePath, JSON.stringify(responseContent), 'utf8');
         return new Response(JSON.stringify(responseContent), {
             status: 200,
