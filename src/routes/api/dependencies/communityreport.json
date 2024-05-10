@@ -6,7 +6,7 @@
       "last_stable_release_date": "2024-04-11", ✅
       "versions_behind": "0", ✅
       "development_activity": {
-        "commit_frequency": "37",
+        "commit_frequency": "37", ✅
         "issue_metrics": {
           "open_issues": "3625",
           "closed_issues": "1472",

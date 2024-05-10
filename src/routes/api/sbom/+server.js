@@ -71,17 +71,30 @@ async function getlibinfo(library, version) {
         const homepageRequestUrl = `https://libraries.io/api/pypi/${library}?api_key=${apiKey}`;
         try {
             const homepageResponse = await fetch(homepageRequestUrl);
+            console.log("Homepage Response Code:", homepageResponse.status); // Log the HTTP response code
             if (homepageResponse.ok) {
                 const homepageData = await homepageResponse.json();
-                homepage = homepageData.homepage;
-                console.log("homepage", homepage)
+                if (homepageData.repository_url && isValidURL(homepageData.repository_url)) {
+                    homepage = homepageData.repository_url;
+                } else {
+                    homepage = homepageData.homepage;
+                }
+                console.log("homepage", homepage);
 
-                break; // Stop iterating if the request is successful'
-                
+                break; // Stop iterating if the request is successful
             }
         } catch (error) {
             console.error(`Error calling Libraries.io API for homepage: ${error}`);
         }
+    }
+
+    function isValidURL(string) {
+    try {
+        new URL(string);
+        return true;
+    } catch (_) {
+        return false;  
+    }
     }
 
     return { ...data, homepage };
@@ -411,20 +424,82 @@ export async function GET({ url }) {
                     communityReport[library].published_at = libraryInfoObject.published_at;
                     communityReport[library].license = libraryInfoObject.original_license;
                 }
+
+                // Search for latest stable release published at
+                const latestStableReleaseIndex = libraryInfoString.indexOf('"latest_stable_release_published_at":');
+                if (latestStableReleaseIndex !== -1) {
+                    const startIndex = latestStableReleaseIndex + '"latest_stable_release_published_at":'.length;
+                    const endIndex = libraryInfoString.indexOf(',', startIndex);
+                    const latestStableReleasePublishedAt = libraryInfoString.substring(startIndex, endIndex).replace(/"/g, '');
+                    communityReport[library].latest_stable_release_published_at = latestStableReleasePublishedAt;
+                }
+                // Search for latest stable release number
+                const latestStableReleaseNumberIndex = libraryInfoString.indexOf('"latest_stable_release_number":');
+                if (latestStableReleaseNumberIndex !== -1) {
+                    const startIndex = latestStableReleaseNumberIndex + '"latest_stable_release_number":'.length;
+                    const endIndex = libraryInfoString.indexOf(',', startIndex);
+                    const latestStableReleaseNumber = libraryInfoString.substring(startIndex, endIndex).replace(/"/g, '');
+                    communityReport[library].latest_stable_release_number = latestStableReleaseNumber;
+                }
+                // Extract version info between installed version and latest version
+                const versionInfoStartIndex = libraryInfoString.indexOf(searchString);
+                const versionInfoEndIndex = libraryInfoString.indexOf(`{"number":"${communityReport[library].latest_stable_release_number}"`);
+                if (versionInfoStartIndex !== -1 && versionInfoEndIndex !== -1) {
+                    const versionInfo = libraryInfoString.substring(versionInfoStartIndex, versionInfoEndIndex);
+                    // Count versions that do not contain letters
+                    const versionPattern = /"number":"([^"]+)"/g;
+                    let match;
+                    let count = 0;
+                    while ((match = versionPattern.exec(versionInfo)) !== null) {
+                        count++;
+                    }
+                    communityReport[library].versions_behind = count;
+                }
+
                 // Parse homepage into author and name
                 const url = new URL(libraryInfo.homepage);
                 const [, author, name] = url.pathname.split('/');
                 console.log('Author:', author, 'name:', name);
 
-                // Run gh api command
-                exec(`gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/${author}/${name}/stats/commit_activity`, (error, stdout, stderr) => {
-                    if (error) {
-                        console.error(`exec error: ${error}`);
-                        return;
-                    }
-                    console.log(`Commit frequency: ${stdout}`);
-                    communityReport[library].development_activity.commit_frequency = stdout;
-                });
+                // Run gh api command with retry
+                let retryCount = 0;
+                const maxRetries = 5;
+                const retryDelay = 1000; // 1 second
+
+                const runGhApiCommand = () => {
+                    exec(`gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/${author}/${name}/stats/commit_activity`, (error, stdout, stderr) => {
+                        if (error) {
+                            console.error(`exec error: ${error}`);
+                            if (retryCount < maxRetries) {
+                                retryCount++;
+                                console.log(`Retrying... (Attempt ${retryCount})`);
+                                setTimeout(runGhApiCommand, retryDelay);
+                            } else {
+                                console.error(`Failed to run gh api command after ${maxRetries} attempts.`);
+                            }
+                            return;
+                        }
+
+                        // Parse stdout as JSON
+                        const commitData = JSON.parse(stdout.replace('Commit frequency: ', ''));
+
+                        // Check if commitData is an array
+                        if (!Array.isArray(commitData)) {
+                            console.error('Unexpected data from gh api command:', commitData);
+                            return;
+                        }
+
+                        // Sum up all the 'total' fields
+                        const commitFreq = commitData.reduce((total, item) => total + item.total, 0);
+
+                        console.log(`Total commits: ${commitFreq}`);
+                        communityReport[library].development_activity.commit_frequency = commitFreq;
+                    });
+                };
+
+                runGhApiCommand();
+
+                
             } else {
                 console.error(`Failed to get library info for ${library}@${version}`);
             }
