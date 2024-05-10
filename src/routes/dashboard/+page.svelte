@@ -53,7 +53,7 @@
             const data = await response.json(); // Parse the JSON response
             console.log('Repository downloaded successfully!');
 
-			const sbomResponse = await fetch('/api/sbom');
+			const sbomResponse = await fetch(`/api/sbom?repoUrl=${encodeURIComponent(repoUrl)}`);
 			if (!sbomResponse.ok) {
 				throw new Error(`HTTP error! status: ${sbomResponse.status}`);
 			}

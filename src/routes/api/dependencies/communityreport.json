@@ -3,8 +3,8 @@
       "name": "pandas", ✅
       "version": "2.2.2", ✅
       "version_date": "2024-04-11",✅
-      "last_stable_release_date": "2024-04-11",
-      "versions_behind": "0",
+      "last_stable_release_date": "2024-04-11", ✅
+      "versions_behind": "0", ✅
       "development_activity": {
         "commit_frequency": "37",
         "issue_metrics": {

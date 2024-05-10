@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'path';
 import { execSync } from 'node:child_process';
+import { exec } from 'child_process';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import fetch from 'node-fetch';  // Ensure node-fetch is installed in your environment
@@ -43,6 +44,7 @@ async function checkVulnerabilities(library, version) {
 async function getlibinfo(library, version) {
     const apiKeyList = ['7165ca9cc733d1abd00a87a930d9d714', '10b8f9c2a81b273a6c0db61fb96fb212', '53d6ec55fcbfdedb9ac6bd44ae42050c']; // List of API keys
     let response;
+    let homepage;
 
     // Iterate through the API key list
     for (const apiKey of apiKeyList) {
@@ -63,7 +65,26 @@ async function getlibinfo(library, version) {
     }
 
     const data = await response.json();
-    return data;
+
+    // Call the API again to get the homepage
+    for (const apiKey of apiKeyList) {
+        const homepageRequestUrl = `https://libraries.io/api/pypi/${library}?api_key=${apiKey}`;
+        try {
+            const homepageResponse = await fetch(homepageRequestUrl);
+            if (homepageResponse.ok) {
+                const homepageData = await homepageResponse.json();
+                homepage = homepageData.homepage;
+                console.log("homepage", homepage)
+
+                break; // Stop iterating if the request is successful'
+                
+            }
+        } catch (error) {
+            console.error(`Error calling Libraries.io API for homepage: ${error}`);
+        }
+    }
+
+    return { ...data, homepage };
 }
 
 
@@ -106,7 +127,15 @@ async function getCveDetails(library, cve, resultsFolderPath, version) {
 
 
 // SvelteKit uses this export pattern for handling requests
-export async function GET() {
+export async function GET({ url }) {
+	const repoUrl = url.searchParams.get('repoUrl');
+    console.log("repoUrl", repoUrl)
+	if (!repoUrl) {
+		console.error('Missing repoUrl parameter');
+		// Use Response for error cases
+		return new Response('Missing repoUrl parameter', { status: 400 });
+	}
+   
     console.log('Generating SBOM...');
 
     try {
@@ -354,12 +383,12 @@ export async function GET() {
             fs.mkdirSync(cacheDirectory);
         }
 
-        //community report section
-        const communityReport = Object.fromEntries(Object.entries(libraryVersions).map(([library, version]) => [library, { version: version.version, published_at: null, license: null }]));
+            
+
+        const communityReport = Object.fromEntries(Object.entries(libraryVersions).map(([library, version]) => [library, { version: version.version, published_at: null, license: null, latest_stable_release_published_at: null, latest_stable_release_number: null, versions_behind: 0, development_activity: { commit_frequency: null } }]));
         console.log('Community Report:', communityReport);
         responseContent.communityReport = communityReport;
 
-        
         // Get list of libraries and versions
         const librariesAndVersions = Object.entries(libraryVersions).map(([library, version]) => ({ library, version: version.version }));
 
@@ -368,24 +397,38 @@ export async function GET() {
             const libraryInfo = await getlibinfo(library, version);
             // Process the library info
             if (libraryInfo) {
-            const libraryInfoString = JSON.stringify(libraryInfo);
-            const searchString = `{"number":"${version}","published_at":`;
-            const startIndex = libraryInfoString.indexOf(searchString);
-            if (startIndex !== -1) {
-                // Process the library info
-                const endIndex = libraryInfoString.indexOf('}', startIndex) + 1;
-                const libraryInfoJSON = libraryInfoString.substring(startIndex, endIndex);
-                const libraryInfoObject = JSON.parse(libraryInfoJSON);
-                // Do something with the library info
-                console.log(`Library Info for ${library}@${version}:`, libraryInfoObject);
-                communityReport[library].published_at = libraryInfoObject.published_at;
-                communityReport[library].license = libraryInfoObject.original_license;
-            }
+                console.log('homepage', libraryInfo.homepage);
+                const libraryInfoString = JSON.stringify(libraryInfo);
+                const searchString = `{"number":"${version}","published_at":`;
+                const startIndex = libraryInfoString.indexOf(searchString);
+                if (startIndex !== -1) {
+                    // Process the library info
+                    const endIndex = libraryInfoString.indexOf('}', startIndex) + 1;
+                    const libraryInfoJSON = libraryInfoString.substring(startIndex, endIndex);
+                    const libraryInfoObject = JSON.parse(libraryInfoJSON);
+                    // Do something with the library info
+                    console.log(`Library Info for ${library}@${version}:`, libraryInfoObject);
+                    communityReport[library].published_at = libraryInfoObject.published_at;
+                    communityReport[library].license = libraryInfoObject.original_license;
+                }
+                // Parse homepage into author and name
+                const url = new URL(libraryInfo.homepage);
+                const [, author, name] = url.pathname.split('/');
+                console.log('Author:', author, 'name:', name);
+
+                // Run gh api command
+                exec(`gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/${author}/${name}/stats/commit_activity`, (error, stdout, stderr) => {
+                    if (error) {
+                        console.error(`exec error: ${error}`);
+                        return;
+                    }
+                    console.log(`Commit frequency: ${stdout}`);
+                    communityReport[library].development_activity.commit_frequency = stdout;
+                });
             } else {
-            console.error(`Failed to get library info for ${library}@${version}`);
+                console.error(`Failed to get library info for ${library}@${version}`);
             }
         }
-
         fs.writeFileSync(cachePath, JSON.stringify(responseContent), 'utf8');
         return new Response(JSON.stringify(responseContent), {
             status: 200,
@@ -393,8 +436,7 @@ export async function GET() {
                 'Content-Type': 'application/json'
             }
         });
-
-        
+                
     } catch (error) {
         console.error('Error:', error);
         return new Response(`Internal Server Error: ${error.message}`, { status: 500 });
