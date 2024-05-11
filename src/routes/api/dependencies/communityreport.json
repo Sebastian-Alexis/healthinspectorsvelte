@@ -9,7 +9,7 @@
         "commit_frequency": "37", ✅
         "issue_metrics": {
           "open_issues": "3625", ✅
-          "closed_issues": "1472", ✅
+          "closed_issues": "1472", el✅
           "average_time_to_close": "7.6"
         },
         "pull_request_activity": "133"

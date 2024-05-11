@@ -531,8 +531,7 @@ export async function GET({ url }) {
                         
 
                         // Run gh api command for issues
-                        exec(`gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/${author}/${name}/issues?per_page=100`, (error, stdout, stderr) => {
-                            if (error) {
+                        exec(`gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" "/repos/${author}/${name}/issues?state=all&per_page=100"`, (error, stdout, stderr) => {                            if (error) {
                                 console.error(`exec error: ${error}`);
                                 return;
                             }
