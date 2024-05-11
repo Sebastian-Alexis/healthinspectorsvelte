@@ -514,6 +514,12 @@ export async function GET({ url }) {
                         // Check if commitData is an array
                         if (!Array.isArray(commitData)) {
                             console.error('Unexpected data from gh api command:', commitData);
+                            if (retryCount < maxRetries) {
+                                retryCount++;
+                                console.log(`Retrying... (Attempt ${retryCount})`);
+                                setTimeout(runGhApiCommand, retryDelay);
+                            }
+                            console.log('not retrying', retryCount, maxRetries)
                             return;
                         }
 
@@ -522,26 +528,46 @@ export async function GET({ url }) {
 
                         console.log(`Total commits: ${commitFreq}`);
 
+                        
+
                         // Run gh api command for issues
-                        exec(`gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/${author}/${name}/issues`, (error, stdout, stderr) => {
+                        exec(`gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/${author}/${name}/issues?per_page=100`, (error, stdout, stderr) => {
                             if (error) {
                                 console.error(`exec error: ${error}`);
                                 return;
                             }
                         
                             // Parse stdout as JSON
-                            const issueData = JSON.parse(stdout);
-                        
+                            let issueData;
+                            try {
+                                issueData = JSON.parse(stdout);
+                            } catch (e) {
+                                console.error('Error parsing JSON:', e);
+                                if (retryCount < maxRetries) {
+                                    retryCount++;
+                                    execCommand();
+                                }
+                                
+                                return;
+                            }
+                    
                             // Check if issueData is an array
                             if (!Array.isArray(issueData)) {
                                 console.error('Unexpected data from gh api command:', issueData);
+                                if (retryCount < maxRetries) {
+                                    retryCount++;
+                                    console.log(`Retrying... (Attempt ${retryCount})`);
+                                    execCommand();
+                                }
+                                console.log('not retrying', retryCount, maxRetries)
                                 return;
                             }
-                        
                             // Count the number of open issues
                             const openIssues = issueData.reduce((total, issue) => total + (issue.state === 'open' ? 1 : 0), 0);
-                        
+                            const closedIssues = issueData.reduce((total, issue) => total + (issue.state === 'closed' ? 1 : 0), 0);
+
                             console.log(`Open issues: ${openIssues}`);
+                            console.log(`Closed issues: ${closedIssues}`);
                         
                             // Check if communityReport[library].development_activity.issue_metrics is defined
                             if (communityReport[library] && communityReport[library].development_activity) {
@@ -549,6 +575,7 @@ export async function GET({ url }) {
                                     communityReport[library].development_activity.issue_metrics = {};
                                 }
                                 communityReport[library].development_activity.issue_metrics.open_issues = openIssues;
+                                communityReport[library].development_activity.issue_metrics.closed_issues = closedIssues;
                             } else {
                                 console.error(`Cannot set open_issues for ${library}, issue_metrics is undefined.`);
                             }
