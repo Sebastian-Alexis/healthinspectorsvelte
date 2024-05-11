@@ -66,7 +66,10 @@
         },
         "colorama": {
             "development_activity": {
-                "commit_frequency": null
+                "commit_frequency": 3,
+                "issue_metrics": {
+                    "open_issues": 30
+                }
             },
             "latest_stable_release_number": "0.4.6",
             "latest_stable_release_published_at": "2022-10-25T02:38:17.509Z",
@@ -130,7 +133,10 @@
         },
         "tqdm": {
             "development_activity": {
-                "commit_frequency": null
+                "commit_frequency": 36,
+                "issue_metrics": {
+                    "open_issues": 30
+                }
             },
             "latest_stable_release_number": "4.66.4",
             "latest_stable_release_published_at": "2024-05-02T22:42:09.000Z",
@@ -267,7 +273,7 @@
                             {
                                 "confidence": 1,
                                 "technique": "instrumentation",
-                                "value": "C:\\Users\\sebas\\AppData\\Local\\Temp\\cdxgen-venv-GMBfkR"
+                                "value": "C:\\Users\\sebas\\AppData\\Local\\Temp\\cdxgen-venv-vf6QxD"
                             }
                         ]
                     }
@@ -315,7 +321,7 @@
                             {
                                 "confidence": 1,
                                 "technique": "instrumentation",
-                                "value": "C:\\Users\\sebas\\AppData\\Local\\Temp\\cdxgen-venv-GMBfkR"
+                                "value": "C:\\Users\\sebas\\AppData\\Local\\Temp\\cdxgen-venv-vf6QxD"
                             }
                         ]
                     }
@@ -336,7 +342,7 @@
                             {
                                 "confidence": 1,
                                 "technique": "instrumentation",
-                                "value": "C:\\Users\\sebas\\AppData\\Local\\Temp\\cdxgen-venv-GMBfkR"
+                                "value": "C:\\Users\\sebas\\AppData\\Local\\Temp\\cdxgen-venv-vf6QxD"
                             }
                         ]
                     }
@@ -471,7 +477,7 @@
                             {
                                 "confidence": 1,
                                 "technique": "instrumentation",
-                                "value": "C:\\Users\\sebas\\AppData\\Local\\Temp\\cdxgen-venv-GMBfkR"
+                                "value": "C:\\Users\\sebas\\AppData\\Local\\Temp\\cdxgen-venv-vf6QxD"
                             }
                         ]
                     }
@@ -590,7 +596,7 @@
                     "phase": "build"
                 }
             ],
-            "timestamp": "2024-05-11T04:53:03Z",
+            "timestamp": "2024-05-11T06:40:50Z",
             "tools": {
                 "components": [
                     {
@@ -606,7 +612,7 @@
                 ]
             }
         },
-        "serialNumber": "urn:uuid:cb5205f3-c54d-43c0-93ac-4a77e8fd8850",
+        "serialNumber": "urn:uuid:d127631e-2326-434d-9466-fdb8d99ca0df",
         "services": [],
         "specVersion": "1.5",
         "version": 1

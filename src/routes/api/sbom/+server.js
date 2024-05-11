@@ -431,7 +431,7 @@ export async function GET({ url }) {
         responseContent.communityReport = communityReport;
 
         // Get list of libraries and versions
-        const librariesAndVersions = Object.entries(libraryVersions).map(([library, version]) => ({ library, version: version.version }));
+        const librariesAndVersions = Object.entries(libraryVersions).map(([library, version]) => ({ library, version: version.version })).slice(1); // Skip the first element
 
         // Call library info for each library
         for (const { library, version } of librariesAndVersions) {
@@ -552,6 +552,7 @@ export async function GET({ url }) {
                             } else {
                                 console.error(`Cannot set open_issues for ${library}, issue_metrics is undefined.`);
                             }
+                            fs.writeFileSync(cachePath, JSON.stringify(responseContent), 'utf8');
                         });
                         communityReport[library].development_activity.commit_frequency = commitFreq;
                     });
