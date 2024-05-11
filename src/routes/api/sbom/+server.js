@@ -493,6 +493,38 @@ export async function GET({ url }) {
                         const commitFreq = commitData.reduce((total, item) => total + item.total, 0);
 
                         console.log(`Total commits: ${commitFreq}`);
+
+                        // Run gh api command for issues
+                        exec(`gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/${author}/${name}/issues`, (error, stdout, stderr) => {
+                            if (error) {
+                                console.error(`exec error: ${error}`);
+                                return;
+                            }
+                        
+                            // Parse stdout as JSON
+                            const issueData = JSON.parse(stdout);
+                        
+                            // Check if issueData is an array
+                            if (!Array.isArray(issueData)) {
+                                console.error('Unexpected data from gh api command:', issueData);
+                                return;
+                            }
+                        
+                            // Count the number of open issues
+                            const openIssues = issueData.reduce((total, issue) => total + (issue.state === 'open' ? 1 : 0), 0);
+                        
+                            console.log(`Open issues: ${openIssues}`);
+                        
+                            // Check if communityReport[library].development_activity.issue_metrics is defined
+                            if (communityReport[library] && communityReport[library].development_activity) {
+                                if (!communityReport[library].development_activity.issue_metrics) {
+                                    communityReport[library].development_activity.issue_metrics = {};
+                                }
+                                communityReport[library].development_activity.issue_metrics.open_issues = openIssues;
+                            } else {
+                                console.error(`Cannot set open_issues for ${library}, issue_metrics is undefined.`);
+                            }
+                        });
                         communityReport[library].development_activity.commit_frequency = commitFreq;
                     });
                 };

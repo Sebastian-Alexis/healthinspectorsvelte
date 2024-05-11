@@ -24,7 +24,10 @@
         },
         "certifi": {
             "development_activity": {
-                "commit_frequency": 51
+                "commit_frequency": 51,
+                "issue_metrics": {
+                    "open_issues": 4
+                }
             },
             "latest_stable_release_number": "2024.2.2",
             "latest_stable_release_published_at": "2024-02-02T01:22:14.000Z",
@@ -35,7 +38,10 @@
         },
         "chardet": {
             "development_activity": {
-                "commit_frequency": null
+                "commit_frequency": 2,
+                "issue_metrics": {
+                    "open_issues": 30
+                }
             },
             "latest_stable_release_number": "5.2.0",
             "latest_stable_release_published_at": "2023-08-01T19:23:00.000Z",
@@ -46,7 +52,10 @@
         },
         "charset-normalizer": {
             "development_activity": {
-                "commit_frequency": 92
+                "commit_frequency": 92,
+                "issue_metrics": {
+                    "open_issues": 13
+                }
             },
             "latest_stable_release_number": "3.3.2",
             "latest_stable_release_published_at": "2023-11-01T04:02:29.000Z",
@@ -68,7 +77,7 @@
         },
         "idna": {
             "development_activity": {
-                "commit_frequency": 35
+                "commit_frequency": null
             },
             "latest_stable_release_number": "null",
             "latest_stable_release_published_at": "null",
@@ -90,7 +99,10 @@
         },
         "requests": {
             "development_activity": {
-                "commit_frequency": 81
+                "commit_frequency": 81,
+                "issue_metrics": {
+                    "open_issues": 30
+                }
             },
             "latest_stable_release_number": "0.0.1",
             "latest_stable_release_published_at": "2023-07-20T16:16:14.211Z",
@@ -101,7 +113,10 @@
         },
         "soupsieve": {
             "development_activity": {
-                "commit_frequency": 9
+                "commit_frequency": 9,
+                "issue_metrics": {
+                    "open_issues": 12
+                }
             },
             "latest_stable_release_number": "2.4.1",
             "latest_stable_release_published_at": "2023-04-16T23:58:03.946Z",
@@ -123,7 +138,7 @@
         },
         "urllib3": {
             "development_activity": {
-                "commit_frequency": 183
+                "commit_frequency": null
             },
             "latest_stable_release_number": "2.2.1",
             "latest_stable_release_published_at": "2024-02-18T03:55:54.000Z",
@@ -246,7 +261,7 @@
                             {
                                 "confidence": 1,
                                 "technique": "instrumentation",
-                                "value": "C:\\Users\\sebas\\AppData\\Local\\Temp\\cdxgen-venv-47C4v4"
+                                "value": "C:\\Users\\sebas\\AppData\\Local\\Temp\\cdxgen-venv-1s2E3b"
                             }
                         ]
                     }
@@ -294,7 +309,7 @@
                             {
                                 "confidence": 1,
                                 "technique": "instrumentation",
-                                "value": "C:\\Users\\sebas\\AppData\\Local\\Temp\\cdxgen-venv-47C4v4"
+                                "value": "C:\\Users\\sebas\\AppData\\Local\\Temp\\cdxgen-venv-1s2E3b"
                             }
                         ]
                     }
@@ -315,7 +330,7 @@
                             {
                                 "confidence": 1,
                                 "technique": "instrumentation",
-                                "value": "C:\\Users\\sebas\\AppData\\Local\\Temp\\cdxgen-venv-47C4v4"
+                                "value": "C:\\Users\\sebas\\AppData\\Local\\Temp\\cdxgen-venv-1s2E3b"
                             }
                         ]
                     }
@@ -450,7 +465,7 @@
                             {
                                 "confidence": 1,
                                 "technique": "instrumentation",
-                                "value": "C:\\Users\\sebas\\AppData\\Local\\Temp\\cdxgen-venv-47C4v4"
+                                "value": "C:\\Users\\sebas\\AppData\\Local\\Temp\\cdxgen-venv-1s2E3b"
                             }
                         ]
                     }
@@ -569,7 +584,7 @@
                     "phase": "build"
                 }
             ],
-            "timestamp": "2024-05-10T23:19:15Z",
+            "timestamp": "2024-05-11T02:00:54Z",
             "tools": {
                 "components": [
                     {
@@ -585,7 +600,7 @@
                 ]
             }
         },
-        "serialNumber": "urn:uuid:7f323838-c787-421f-83b0-c90d68479c91",
+        "serialNumber": "urn:uuid:e7a3fc79-8c63-4c5a-bc20-507974aeb0aa",
         "services": [],
         "specVersion": "1.5",
         "version": 1
