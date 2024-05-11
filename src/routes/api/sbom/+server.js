@@ -40,6 +40,16 @@ async function checkVulnerabilities(library, version) {
         return { vulns: [] };  // Safeguard: Return empty vulnerabilities array on error
     }
 }
+
+function isValidURL(string) {
+    try {
+        new URL(string);
+        return true;
+    } catch (_) {
+        return false;
+    }
+}
+
 // Function to call the libraries.io API
 async function getlibinfo(library, version) {
     const apiKeyList = ['7165ca9cc733d1abd00a87a930d9d714', '10b8f9c2a81b273a6c0db61fb96fb212', '53d6ec55fcbfdedb9ac6bd44ae42050c']; // List of API keys
@@ -66,39 +76,57 @@ async function getlibinfo(library, version) {
 
     const data = await response.json();
 
-    // Call the API again to get the homepage
-    for (const apiKey of apiKeyList) {
-        const homepageRequestUrl = `https://libraries.io/api/pypi/${library}?api_key=${apiKey}`;
-        try {
-            const homepageResponse = await fetch(homepageRequestUrl);
-            console.log("Homepage Response Code:", homepageResponse.status); // Log the HTTP response code
-            if (homepageResponse.ok) {
-                const homepageData = await homepageResponse.json();
-                if (homepageData.repository_url && isValidURL(homepageData.repository_url)) {
-                    homepage = homepageData.repository_url;
-                } else {
-                    homepage = homepageData.homepage;
-                }
-                console.log("homepage", homepage);
-
-                break; // Stop iterating if the request is successful
-            }
-        } catch (error) {
-            console.error(`Error calling Libraries.io API for homepage: ${error}`);
-        }
-    }
-
-    function isValidURL(string) {
+    // Call the API again to get the homepage as a string
+    // Call the API again to get the homepage as a string
+    const homepageRequestUrl = `https://pypi.org/pypi/${library}/json`;
     try {
-        new URL(string);
-        return true;
-    } catch (_) {
-        return false;  
-    }
+        const homepageResponse = await fetch(homepageRequestUrl);
+        if (homepageResponse.ok) {
+            const homepageText = await homepageResponse.text();
+            const lines = homepageText.split('\n');
+    
+            let fallbackHomepage = ''; // Fallback URL in case the primary search fails
+    
+            lineLoop: for (let line of lines) {
+                let startIndex = 0;
+                while ((startIndex = line.indexOf('https://github.com/', startIndex)) !== -1) {
+                    const issuesEndIndex = line.indexOf('/issues', startIndex);
+                    if (issuesEndIndex !== -1 && issuesEndIndex - startIndex <= 50) {
+                        homepage = line.substring(startIndex, issuesEndIndex);
+                        console.log(`Homepage found: ${homepage}`);
+                        break lineLoop;  // Break out of the loop once a match is found
+                    }
+    
+                    // Prepare for fallback by looking for any GitHub URL ending with a quotation mark
+                    const genericEndIndex = line.indexOf('"', startIndex + 19); // +19 to move past "https://github.com/"
+                    if (genericEndIndex !== -1 && fallbackHomepage === '') { // Only set fallback if not already found
+                        fallbackHomepage = line.substring(startIndex, genericEndIndex);
+                    }
+    
+                    startIndex += 'https://github.com/'.length; // Move startIndex forward to continue searching the line
+                }
+            }
+    
+            // If the primary search didn't result in finding the homepage, use the fallback URL
+            if (!homepage && fallbackHomepage) {
+                homepage = fallbackHomepage;
+                console.log(`Fallback homepage found: ${homepage}`);
+            }
+        } else {
+            console.error(`HTTP error on fetching homepage: ${homepageResponse.status}`);
+        }
+    } catch (error) {
+        console.error(`Error fetching PyPI API for homepage: ${error}`);
     }
 
-    return { ...data, homepage };
+
+    if (!homepage) {
+        console.error("Homepage not found");
+    }
+
+    return homepage ? { ...data, homepage } : null;
 }
+
 
 
 // Helper function to get CVE details from NVD

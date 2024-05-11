@@ -62,12 +62,8 @@ export async function GET({ url }) {
 		await execAsync(`git clone ${repoUrl} ${repoPath}`);
 		console.log(`Cloned repository from ${repoUrl} to ${repoPath}`);
 
-		const requirementsFilePath = path.join(repoPath, 'requirements.txt');
-		const requirementsFile = await fs.promises.readFile(requirementsFilePath, 'utf8');
-		console.log(`Read requirements file from ${requirementsFilePath}`);
-
 		// Return a Response object with JSON body
-		return new Response(JSON.stringify({ requirementsFile }), {
+		return new Response(JSON.stringify("works!"), {
 			status: 200, // Explicitly set the status code
 			headers: { 'Content-Type': 'application/json' } // Set headers appropriately
 		});
