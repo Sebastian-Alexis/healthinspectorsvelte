@@ -5,6 +5,7 @@ import { exec } from 'child_process';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import fetch from 'node-fetch';  // Ensure node-fetch is installed in your environment
+import { version } from 'node:process';
 
 // Helper function to check vulnerabilities
 async function checkVulnerabilities(library, version) {
@@ -28,7 +29,7 @@ async function checkVulnerabilities(library, version) {
         }
 
         const vulnerabilityData = await response.json();  // Contains vulnerability information
-        console.log('Vulnerability Data:', library);
+        console.log('Vulnerability Data:', vulnerabilityData);
         
         if (vulnerabilityData && vulnerabilityData.vulns && vulnerabilityData.vulns.length === 0) {
             console.log(`No vulnerabilities found for ${library}`);
@@ -322,39 +323,52 @@ export async function GET({ url }) {
         const libraryCVEs = {};
         const libraryNames = Object.keys(libraryVersions);
         const baseCvePath = 'C:\\Users\\sebas\\Programming\\healthinspectorsvelte\\src\\routes\\api\\sbom\\dependencies\\results';
-        
+
         libraryNames.forEach(library => {
+            const currentVersion = libraryVersions[library].version;  // Get the current version from libraryVersions
             const cveFiles = fs.readdirSync(baseCvePath); // Read all files in the CVE directory
-            const cvePaths = cveFiles.filter(cveFile => cveFile.startsWith(library) && cveFile.endsWith('.json'));
+            const cvePaths = cveFiles.filter(cveFile => {
+                const fileNameParts = cveFile.split('@');  // Split the file name to get the library name and the rest
+                const fileLibraryName = fileNameParts[0];
+                const versionAndCve = fileNameParts[1].split('_');  // Split to separate version and CVE
+                const fileLibraryVersion = versionAndCve[0];
+                return fileLibraryName === library && fileLibraryVersion === currentVersion && cveFile.endsWith('.json');
+            });
             const cves = cvePaths.map(cvePath => {
                 const cveFileName = path.basename(cvePath, '.json');
                 const cve = cveFileName.substring(cveFileName.lastIndexOf('_') + 1);
-                return cve;
+                return {
+                    cve: cve,
+                    version: currentVersion  // Use the version from libraryVersions
+                };
             });
             if (cves.length > 0) {
                 libraryCVEs[library] = cves;
             }
         });
+
+        
         
         console.log(libraryCVEs);
 
-		// Split the tree into lines
-		let treeLines = tree.split('\n');
+        // Split the tree into lines
+        let treeLines = tree.split('\n');
 
-		// For each line in the tree
-		for (let i = 0; i < treeLines.length; i++) {
-			// For each library in libraryCVEs
-			for (const library in libraryCVEs) {
-				// If the line contains the library name
-				if (treeLines[i].includes(library)) {
-					// Append the CVEs to the end of the line
-					treeLines[i] += ' ' + libraryCVEs[library].join(', ');
-				}
-			}
-		}
+        // For each line in the tree
+        for (let i = 0; i < treeLines.length; i++) {
+            // For each library in libraryCVEs
+            for (const library in libraryCVEs) {
+                // If the line contains the library name
+                if (treeLines[i].includes(library)) {
+                    // Append the CVEs to the end of the line
+                    const cves = libraryCVEs[library].map(cve => cve.cve).join(', ');
+                    treeLines[i] += ' ' + cves;
+                }
+            }
+        }
 
-		// Join the lines back into a single string
-		tree = treeLines.join('\n');
+        // Join the lines back into a single string
+        tree = treeLines.join('\n');
         // Package response content
 
 
@@ -495,6 +509,14 @@ export async function GET({ url }) {
                 const retryDelay = 1000; // 1 second
 
                 const runGhApiCommand = () => {
+
+                    const calculateDaysClosed = (createdAt, closedAt) => {
+                        const date1 = new Date(createdAt);
+                        const date2 = new Date(closedAt);
+                        const diffTime = Math.abs(date2 - date1);
+                        return Math.ceil(diffTime / (1000 * 60 * 60 * 24)); // Convert milliseconds to days
+                    };
+
                     exec(`gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/${author}/${name}/stats/commit_activity`, (error, stdout, stderr) => {
                         if (error) {
                             console.error(`exec error: ${error}`);
@@ -561,6 +583,35 @@ export async function GET({ url }) {
                                 console.log('not retrying', retryCount, maxRetries)
                                 return;
                             }
+
+                            let totalDaysClosed = 0;
+                            let closedIssuesCount = 0;
+                            issueData.forEach(issue => {
+                                if (issue.state === 'closed' && issue.created_at && issue.closed_at) {
+                                    const daysClosed = calculateDaysClosed(issue.created_at, issue.closed_at);
+                                    console.log(`Issue #${issue.number} was closed in ${daysClosed} days.`);
+                                    totalDaysClosed += daysClosed;
+                                    closedIssuesCount++;
+                                }
+                            });
+
+                            const averageTimeToClose = closedIssuesCount > 0 ? totalDaysClosed / closedIssuesCount : 0;
+                            console.log(`Average time to close: ${averageTimeToClose} days`);
+
+                            if (averageTimeToClose !== undefined) {
+                                if (communityReport[library] && communityReport[library].development_activity) {
+                                    if (!communityReport[library].development_activity.issue_metrics) {
+                                        communityReport[library].development_activity.issue_metrics = {};
+                                    }
+                                    communityReport[library].development_activity.issue_metrics.average_time_to_close = averageTimeToClose;
+                                } else {
+                                    console.error(`Cannot set average_time_to_close for ${library}, development_activity or issue_metrics is undefined.`);
+                                }
+                            } else {
+                                console.error(`averageTimeToClose is undefined for ${library}`);
+                            }
+
+
                             // Count the number of open issues
                             const openIssues = issueData.reduce((total, issue) => total + (issue.state === 'open' ? 1 : 0), 0);
                             const closedIssues = issueData.reduce((total, issue) => total + (issue.state === 'closed' ? 1 : 0), 0);
