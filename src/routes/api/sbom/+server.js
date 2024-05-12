@@ -172,11 +172,7 @@ async function getCveDetails(library, cve, resultsFolderPath, version) {
 export async function GET({ url }) {
 	const repoUrl = url.searchParams.get('repoUrl');
     console.log("repoUrl", repoUrl)
-	if (!repoUrl) {
-		console.error('Missing repoUrl parameter');
-		// Use Response for error cases
-		return new Response('Missing repoUrl parameter', { status: 400 });
-	}
+
    
     console.log('Generating SBOM...');
 

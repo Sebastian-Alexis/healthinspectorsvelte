@@ -16,6 +16,7 @@
 	import download from 'downloadjs';
 
 	async function generatesbom() {
+		console.log("test")
 		isButtonDisabled = true;
 		try {
 			const response = await fetch('/api/sbom');
@@ -23,14 +24,38 @@
 				throw new Error(`HTTP error! status: ${response.status}`);
 			}
 			const fullSbomJson = await response.json();
-			const sbom = fullSbomJson.sbom; // Extracting just the sbom part of the JSON
-			const sbomString = JSON.stringify(sbom);
+			let sbom = fullSbomJson.sbom; // Extracting just the sbom part of the JSON
+			let sbomString = JSON.stringify(sbom);
+			const removeString = "C:\\\\\\\\Users\\\\\\\\sebas\\\\\\\\Programming\\\\\\\\healthinspectorsvelte\\\\\\\\src\\\\\\\\routes\\\\\\\\api\\\\\\\\dependencies\\\\\\\\sourcecode\\\\\\\\"; // String to be removed
+			const removeString1 = "C:\\\\\\\\Users\\\\\\\\sebas\\\\\\\\AppData\\\\\\\\Local\\\\\\\\Temp\\\\\\\\"; // String to be removed
+			sbomString = sbomString.replace(new RegExp(removeString, 'g'), ''); // Remove the string
+			sbomString = sbomString.replace(new RegExp(removeString1, 'g'), ''); // Remove the string
 			console.log(sbomString);
 			const sbomBlob = new Blob([sbomString], { type: 'application/json' });
 			download(sbomBlob, 'sbom.json');
-			isButtonDisabled = false;
 		} catch (error) {
 			console.error('Error:', error);
+		} finally {
+			isButtonDisabled = false;
+		}
+	}
+
+	async function generatescommunity() {
+		console.log("test")
+		isButtonDisabled = true;
+		try {
+			const response = await fetch('/api/sbom');
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+			const fullCommunityJson = await response.json();
+			const communityReport = fullCommunityJson.communityReport; // Extracting just the community report part of the JSON
+			const communityString = JSON.stringify(communityReport);
+			console.log(communityString);
+			const communityBlob = new Blob([communityString], { type: 'application/json' });
+			download(communityBlob, 'communityreport.json');
+		} catch (error) {
+			console.log('Error:', error);
 		} finally {
 			isButtonDisabled = false;
 		}
@@ -333,12 +358,18 @@
 	<!-- Fourth Box -->
 	<div class="card p-4 w-1/2 h-60 bg-slate-200 drop-shadow-xl">
 		<article class="prose flex items-center px-2">
-			<h1 class="label-text prose text-2xl">SBOM</h1>
+			<h1 class="label-text prose text-2xl">Reports</h1>
 		</article>
 		<button
 			class="btn btn-primary mx-auto my-auto"
 			on:click={generatesbom}
 			disabled={isButtonDisabled, isLoading}>Download SBOM</button
+		>
+
+		<button
+			class="btn btn-primary mx-auto my-auto"
+			on:click={generatescommunity}
+			disabled={isButtonDisabled, isLoading}>Download Community Report</button
 		>
 	</div>
 </div>
