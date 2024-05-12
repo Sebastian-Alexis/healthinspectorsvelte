@@ -211,10 +211,54 @@ export async function GET({ url }) {
                 }
             });
         }
-
         const sourceCodePath = path.join(sourceCodeDirectory, selectedDirectory);
         console.log('Source Code Directory:', sourceCodePath);
 
+        const subDirectories = fs.readdirSync(sourceCodePath, { withFileTypes: true })
+                  .filter(dirent => dirent.isDirectory())
+                  .map(dirent => dirent.name);
+
+        console.log('Sub Directories:', subDirectories);
+
+        for (const directory of subDirectories) {
+            const command = `pydeps ${directory} --max-bacon 5 --pylib -x os re types _* enum -o graph.svg --noshow`;
+            exec(command, { cwd: sourceCodePath, encoding: 'utf8' }, async (error, stdout, stderr) => {
+                if (error) {
+                    console.error(`exec error: ${error}`);
+                    return;
+                }
+                if (stdout.trim() !== '') {
+                    console.log('SVG is not empty:', stdout);
+                    const svgPath = path.join(sourceCodePath, 'graph.svg');
+                    let svgContent = '';
+                    while (!fs.existsSync(svgPath)) {
+                        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for 1 second
+                    }
+                    if (fs.existsSync(svgPath)) {
+                        svgContent = fs.readFileSync(svgPath, 'utf8');
+                        // Do something with the SVG content
+                        console.log('SVG content:', svgContent);
+                    } else {
+                        console.error('SVG file not found:', svgPath);
+                    }
+                    if (svgContent.trim() === '') {
+                        console.log('Deleted empty SVG file:', svgPath);
+                    }
+                } else {
+                    console.log('SVG is empty for', directory);
+                    // Move on to the next directory
+                }
+            });
+        }
+        
+        if (subDirectories.length === 0) {
+            console.error('No sub directories found.');
+            return new Response('No source code sub directories found', { status: 404 });
+        }
+
+
+
+        
         // Capture the output of cdxgen command
         const output = execSync(`cdxgen -o ${path.join(sourceCodePath, 'bom.json')} -p --author SecureOSS`, {
             cwd: sourceCodePath,
@@ -415,6 +459,13 @@ export async function GET({ url }) {
 
         // Add additional metrics to the response content
 
+        
+        const graphPath = path.join(sourceCodePath, 'graph.svg');
+        const graphSvg = fs.readFileSync(graphPath, 'utf8');
+        console.log('Graph SVG:', graphSvg);
+
+
+
         // Add additional metrics to the response content
         averageProjectScore = isNaN(averageProjectScore) ? 0 : averageProjectScore;
         console.log("tree", tree)
@@ -425,7 +476,8 @@ export async function GET({ url }) {
             numberOfBaseScores: numVulnerabilities,
             baseScores: baseScores,
             averageBaseScore: averageScore,
-            averageProjectScore: averageProjectScore
+            averageProjectScore: averageProjectScore,
+            graphPath: graphSvg
         };
 
 
@@ -631,6 +683,15 @@ export async function GET({ url }) {
                     });
                 };
 
+                // const sourceCodeDir = 'src/routes/api/dependencies/sourcecode';
+
+                // try {
+                //     await fsExtra.emptyDir(sourceCodeDir);
+                //     console.log('All files in sourcecode directory deleted successfully.');
+                // } catch (err) {
+                //     console.error('Error deleting files:', err);
+                // }
+
                 runGhApiCommand();
 
                 
@@ -644,6 +705,7 @@ export async function GET({ url }) {
             headers: {
                 'Content-Type': 'application/json'
             }
+            
         });
                 
     } catch (error) {

@@ -40,6 +40,25 @@
 		}
 	}
 
+	async function generategraph() {
+		console.log("test")
+		isButtonDisabled = true;
+		try {
+			const response = await fetch('/api/sbom');
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+			const fullSbomJson = await response.json();
+			const svgData = fullSbomJson.graphPath; // Extracting the SVG data from the JSON
+			const svgBlob = new Blob([svgData], { type: 'image/svg+xml' });
+			download(svgBlob, 'graph.svg');
+		} catch (error) {
+			console.error('Error:', error);
+		} finally {
+			isButtonDisabled = false;
+		}
+	}
+
 	async function generatescommunity() {
 		console.log("test")
 		isButtonDisabled = true;
@@ -370,6 +389,12 @@
 			class="btn btn-primary mx-auto my-auto"
 			on:click={generatescommunity}
 			disabled={isButtonDisabled, isLoading}>Download Community Report</button
+		>
+
+				<button
+			class="btn btn-primary mx-auto my-auto"
+			on:click={generategraph}
+			disabled={isButtonDisabled, isLoading}>Download Graph</button
 		>
 	</div>
 </div>
