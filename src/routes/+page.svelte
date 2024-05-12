@@ -112,7 +112,7 @@
 					<div class="input">https://healthinspector.sebastianalexis.com/dashboard</div>
 				</div>
 				<img
-					src="/images/placeholderdash.png"
+					src="/images/projectthumbnailcropped.png"
 					alt="dashboard"
 					class="absolute top-0 left-0 w-full h-full object-cover"
 				/>

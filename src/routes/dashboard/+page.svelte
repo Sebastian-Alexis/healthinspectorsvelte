@@ -12,6 +12,7 @@
 	let roundedAverageScore = null;
 	let isButtonDisabled = false;
 	let resetDependencyTree = false;
+	let showGraphButton = false;
 
 	import download from 'downloadjs';
 
@@ -50,6 +51,12 @@
 			}
 			const fullSbomJson = await response.json();
 			const svgData = fullSbomJson.graphPath; // Extracting the SVG data from the JSON
+			console.log(svgData);
+			if (svgData.length > 1000) {
+				showGraphButton = true;
+			} else {
+				return;
+			}
 			const svgBlob = new Blob([svgData], { type: 'image/svg+xml' });
 			download(svgBlob, 'graph.svg');
 		} catch (error) {
@@ -87,6 +94,7 @@
 	averageBaseScore = null;
 	roundedAverageScore = null;
 	resetDependencyTree = true;
+	showGraphButton = false;
 	dependencyTree = '';
     if (repoUrl) {
         try {
@@ -106,6 +114,13 @@
 			console.log('SBOM generated successfully:', sbomData.sbom);
 			console.log('Cleaned Dependency Tree:', sbomData.cleanedDependencyTree);
 			dependencyTree = sbomData.cleanedDependencyTree;
+
+			const svgData = sbomData.graphPath; // Extracting the SVG data from the JSON
+			console.log(svgData);
+			if (svgData.length > 1000) {
+				showGraphButton = true;
+			}
+			
 
 			const responseContent = {
 				averageBaseScore: sbomData.averageBaseScore,
@@ -269,7 +284,7 @@
 	<div class="absolute top-6 right-4">
 		<select class="select select-bordered">
 			<option selected>Python (pip)</option>
-			<option>Java (Maven)</option>
+			<option disabled>Java (Maven)</option>
 		</select>
 	</div>
 	<h1>Dashboard</h1>
@@ -391,11 +406,12 @@
 			disabled={isButtonDisabled, isLoading}>Download Community Report</button
 		>
 
-				<button
-			class="btn btn-primary mx-auto my-auto"
-			on:click={generategraph}
-			disabled={isButtonDisabled, isLoading}>Download Graph</button
-		>
+				{#if showGraphButton}
+					<button
+						class="btn btn-primary mx-auto my-auto"
+						on:click={generategraph}
+						disabled={isButtonDisabled, isLoading}>Download Graph</button>
+				{/if}
 	</div>
 </div>
 
